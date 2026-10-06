@@ -25,6 +25,7 @@ export type Enrollment = {
   planNameHe: string | null;
   levelNumber: number;
   levelSlug: string;
+  levelNameHe: string | null;
   status: string;
 };
 

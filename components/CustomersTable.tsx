@@ -72,6 +72,7 @@ export default function CustomersTable({ customers }: { customers: Customer[] })
                       >
                         {enrollment.planNameHe ?? enrollment.planSlug} · רמה{" "}
                         {enrollment.levelNumber}
+                        {enrollment.levelNameHe ? ` - ${enrollment.levelNameHe}` : ""}
                       </li>
                     ))}
                   </ul>
