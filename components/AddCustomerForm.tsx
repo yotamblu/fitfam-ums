@@ -92,7 +92,7 @@ export default function AddCustomerForm({
 
       <fieldset className="flex flex-col gap-3">
         <legend className="mb-1 text-body-md text-text-secondary">
-          תוכניות שנרכשו (כל תוכנית מתחילה ברמה 1 - רגיל)
+          תוכניות שנרכשו (כל תוכנית מתחילה ברמה הראשונה)
         </legend>
         {plans.length === 0 ? (
           <p className="text-body-md text-text-muted">אין תוכניות להצגה.</p>
