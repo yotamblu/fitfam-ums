@@ -40,7 +40,10 @@ mobile-friendly. Adding a customer lives on its own page (`/add`) on purpose, se
 waitlist's "הוספה כלקוח" button links there with `?email=` (read via `useSearchParams`, which needs a Suspense boundary).
 
 ## Config and commands
-- `.env.local` (gitignored): `NEXT_PUBLIC_API_URL` (default `http://localhost:8081`) and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
+- `.env.local` (gitignored): `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. The app calls the API only through its own forwarding route
+  (`app/backend/[...path]/route.ts`, `/backend/*`), which uses the server-side `API_ORIGIN` (defaults to
+  `http://localhost:8081` in development; REQUIRED in production, else it answers 503 `api_not_configured`).
+  `NEXT_PUBLIC_API_URL` must stay unset in production (a direct browser call from another domain loses the cookie).
   `NEXT_PUBLIC_` values are public by design: never put a secret in one.
 - `npm run dev` (port 3001; the customer app uses 3000) needs the API running. `npm run lint`, `npm run build`.
   Never run `npm run build` while `npm run dev` runs in the same folder.
@@ -54,12 +57,19 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
 ## Security rules (audited 2026-10-07)
 - Authorisation is the API's job (admin role checked on every request). Never rely on hiding UI, and never add
   pages that show data without the shell's admin check.
-- Do not add server-side code (route handlers, server actions) or secrets to this app without a security review: it
-  is deliberately a pure browser client. Never use `dangerouslySetInnerHTML`/`eval`, never store tokens in browser
+- The only server-side code is the forwarding route `app/backend/[...path]/route.ts` (fixed `API_ORIGIN`, allowlist
+  `auth/` + `admin/`, same-site `Origin` check, rejects `..`/slashes/null bytes in path segments, forwards only
+  content-type/accept/cookie, `maxDuration` 60). Do not widen it or add other route handlers, server actions or
+  secrets without a security review. Never use `dangerouslySetInnerHTML`/`eval`, never store tokens in browser
   storage, never put a secret in a `NEXT_PUBLIC_` variable.
 - Keep the headers in `next.config.ts` (frame-ancestors/X-Frame-Options DENY, nosniff, referrer, permissions, HSTS)
   and `app/robots.ts`. A nonce-based `script-src` CSP is a possible later step (Next injects inline scripts).
 - Do NOT set `Cross-Origin-Opener-Policy: same-origin`: it breaks Google's sign-in popup.
+
+## Deployment (Vercel)
+Import the repo as a Vercel project; set `API_ORIGIN` (the API's https address) and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`;
+pick the function region next to the API/database; add the site's https address to the Google OAuth client's
+Authorized JavaScript origins. See README.
 
 ## Before pushing
 Scan the commits for real secret values and business details. Do not push without being asked.

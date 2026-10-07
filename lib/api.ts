@@ -1,6 +1,7 @@
 import type { Customer, CurrentUser, Plan, WaitlistPage } from "./types";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+// Same-origin by default: app/backend/[...path]/route.ts forwards /backend/* to the API (see API_ORIGIN there).
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "/backend";
 
 /** An error response from the API: `{"error": "<code>"}` with an HTTP status. */
 export class ApiError extends Error {

@@ -9,6 +9,9 @@ const MESSAGES: Record<string, string> = {
   no_plans: "יש לבחור לפחות תוכנית אחת.",
   invalid_request: "הנתונים שהוזנו אינם תקינים. בדקו את המייל ואת התוכניות.",
   conflict: "הכתובת הזו כבר קיימת במערכת.",
+  api_unreachable: "השרת לא זמין כרגע. נסו שוב עוד רגע.",
+  api_not_configured: "כתובת ה-API לא מוגדרת בשרת (API_ORIGIN).",
+  forbidden_origin: "הבקשה נחסמה. רעננו את הדף ונסו שוב.",
   waitlist_unavailable: "רשימת ההמתנה לא זמינה כרגע.",
   google_unavailable: "אי אפשר להגיע ל-Google כרגע. נסו שוב עוד רגע.",
 };

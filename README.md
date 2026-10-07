@@ -131,15 +131,29 @@ fitfam-ums/
 Create `.env.local` in the project root (gitignored):
 
 ```
-NEXT_PUBLIC_API_URL=http://localhost:8081
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=<Google OAuth client ID>
 ```
 
-- Both values are public by design: `NEXT_PUBLIC_` variables are compiled into the browser bundle. **Never put a secret
-  in a `NEXT_PUBLIC_` variable.** The Google client ID is not a secret. There is no client secret in this project.
-- The login session is an `HttpOnly` cookie set by the API; this site never sees or stores the token.
-- Restart the dev server after changing `.env.local`.
-- Production values live only in the hosting provider's environment variables. Never commit secrets.
+In development nothing else is needed: the app reaches the API through its own forwarding route, which defaults to
+`http://localhost:8081`. To point it elsewhere set `API_ORIGIN` (server-side only; see below).
+
+| Variable | Where | Meaning |
+|----------|-------|---------|
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID` | build time, public | Google OAuth client ID. Public by design (no client secret exists). If you change it, rebuild/redeploy |
+| `API_ORIGIN` | server-side only | Address of the API, e.g. `https://fitfam-api.onrender.com`. **Required in production**: without it the forwarding route answers 503 `api_not_configured` |
+| `NEXT_PUBLIC_API_URL` | optional | Only to bypass the forwarding route and call an API directly from the browser. Leave unset; a direct call from another domain cannot keep the login cookie |
+
+- **Never put a secret in a `NEXT_PUBLIC_` variable**: those are compiled into the browser bundle.
+- The login session is an `HttpOnly` cookie set by the API; the page's JavaScript never sees or stores the token.
+- Restart the dev server after changing `.env.local`. Production values live only in the host's environment settings.
+
+## Deploying to Vercel
+
+Import this GitHub repo as a Vercel project (framework: Next.js, defaults are fine) and set two environment variables:
+`API_ORIGIN` (the API's https address) and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`. Choose the function region closest to the API
+and the database (Settings -> Functions). Then add the site's https address to the Google OAuth client's **Authorized
+JavaScript origins**. The browser only ever talks to this site; `app/backend/[...path]/route.ts` forwards `/backend/*`
+to `API_ORIGIN` from the server, so the login cookie belongs to this site wherever the API is hosted.
 
 ## Access control and security
 
@@ -152,8 +166,11 @@ API, never only in this front end:
   tests and by live attack checks).
 - **Short admin sessions:** an admin login lasts 12 hours (customers: 7 days), and the session cookie is `HttpOnly`,
   so scripts on the page can never read it.
-- **No server-side code here:** this app is only a browser front end, with no API routes or server actions of its own
-  and no secrets (the only `NEXT_PUBLIC_` values are the API address and Google's public client ID).
+- **One small server-side piece:** the forwarding route `app/backend/[...path]/route.ts`. It is a plain pass-through
+  that only reaches the fixed `API_ORIGIN`, only the `auth/*` and `admin/*` areas, rejects any request whose `Origin`
+  is not this site, rejects path tricks (`..`, slashes, null bytes), and forwards only the content type, accept and
+  cookie headers. It holds no secrets, and the API still checks the admin role on every request. There are no other
+  server routes or server actions, and the only `NEXT_PUBLIC_` value is Google's public client ID.
 - **Browser protections** (`next.config.ts`): the site cannot be embedded in a frame (clickjacking), base-tag and form
   hijacking are blocked, MIME sniffing is off, referrers are trimmed, camera/microphone/location are disabled, HSTS is
   sent, the framework banner is hidden, and crawlers are told to stay away (`robots.txt` + `noindex`).
