@@ -1,10 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { describeError } from "@/lib/messages";
 import type { CurrentUser } from "@/lib/types";
-import Dashboard from "./Dashboard";
+import { AdminSessionContext } from "./AdminSession";
 import GoogleSignIn from "./GoogleSignIn";
 
 type View =
@@ -13,6 +15,11 @@ type View =
   | { kind: "no-access"; email: string }
   | { kind: "ready"; user: CurrentUser }
   | { kind: "error"; message: string };
+
+const NAV_ITEMS = [
+  { href: "/", label: "משתמשים" },
+  { href: "/waitlist", label: "רשימת המתנה" },
+];
 
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
@@ -24,7 +31,51 @@ function CenteredCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function AdminApp() {
+function Header({ user, onLogout }: { user: CurrentUser; onLogout: () => void }) {
+  const pathname = usePathname();
+  return (
+    <header className="flex flex-col gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="font-heading text-headline-md font-extrabold">FitFam · ניהול</h1>
+        <div className="flex items-center gap-3 text-body-md text-text-secondary">
+          <span dir="ltr">{user.email}</span>
+          <button
+            type="button"
+            onClick={onLogout}
+            className="rounded-full border border-border-emphasis px-4 py-1.5 text-text-primary transition hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
+          >
+            התנתקות
+          </button>
+        </div>
+      </div>
+      <nav aria-label="ניווט ראשי" className="flex gap-2 border-b border-border pb-3">
+        {NAV_ITEMS.map((item) => {
+          const active = pathname === item.href;
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={`rounded-full px-4 py-1.5 text-body-md font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${
+                active
+                  ? "bg-surface-raised text-text-primary"
+                  : "text-text-secondary hover:text-text-primary"
+              }`}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
+      </nav>
+    </header>
+  );
+}
+
+/**
+ * Login and layout shared by every admin page: decides what to show (login, no access, or the page itself with the
+ * header and navigation), and gives pages the logged-in admin through `useAdminSession`.
+ */
+export default function AdminShell({ children }: { children: React.ReactNode }) {
   const [view, setView] = useState<View>({ kind: "loading" });
 
   const applyUser = useCallback((user: CurrentUser) => {
@@ -77,6 +128,11 @@ export default function AdminApp() {
   const handleSessionLost = useCallback(() => {
     setView({ kind: "signed-out", notice: "החיבור פג או שאין הרשאה. התחברו שוב." });
   }, []);
+
+  const session = useMemo(
+    () => (view.kind === "ready" ? { user: view.user, onSessionLost: handleSessionLost } : null),
+    [view, handleSessionLost],
+  );
 
   switch (view.kind) {
     case "loading":
@@ -139,11 +195,12 @@ export default function AdminApp() {
 
     case "ready":
       return (
-        <Dashboard
-          user={view.user}
-          onLogout={() => void handleLogout()}
-          onSessionLost={handleSessionLost}
-        />
+        <AdminSessionContext.Provider value={session}>
+          <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8">
+            <Header user={view.user} onLogout={() => void handleLogout()} />
+            {children}
+          </div>
+        </AdminSessionContext.Provider>
       );
   }
 }

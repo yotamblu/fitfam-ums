@@ -1,4 +1,4 @@
-import type { Customer, CurrentUser, Plan } from "./types";
+import type { Customer, CurrentUser, Plan, WaitlistPage } from "./types";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -47,6 +47,8 @@ export const api = {
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   listPlans: () => request<Plan[]>("/admin/plans"),
   listUsers: () => request<Customer[]>("/admin/users"),
+  listWaitlist: (page: number, size: number) =>
+    request<WaitlistPage>(`/admin/waitlist?page=${page}&size=${size}`),
   addUser: (email: string, planSlugs: string[]) =>
     request<Customer>("/admin/users", {
       method: "POST",

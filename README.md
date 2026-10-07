@@ -43,6 +43,7 @@ Working now:
 - **Add a customer:** enter the customer's Google email and tick the plans they purchased (plans come from the API).
   The customer can then log in to the app with Google.
 - **Users list:** everyone in the system with their status and plans.
+- **Waitlist page** (`/waitlist`): everyone who signed up on the public waitlist site, newest first, with their favorite sport, signup time and whether they already have an account. Read-only, paginated.
 
 Planned: changing a customer's plan or level, removing customers, and viewing an audit trail of manual changes.
 
@@ -97,11 +98,14 @@ No test command exists yet.
 
 ```
 fitfam-ums/
-├── app/                  App Router: layout (RTL, fonts), page, global styles and theme tokens
+├── app/                  App Router: root layout (RTL, fonts), global styles, and the `(admin)` route group
+│                         whose layout wraps every page in the shell (`/` users, `/waitlist`)
 ├── components/
-│   ├── AdminApp.tsx          Session state: signed out / no access / dashboard
+│   ├── AdminShell.tsx        Login + header + navigation shared by all admin pages
+│   ├── AdminSession.tsx      Context giving pages the logged-in admin
 │   ├── GoogleSignIn.tsx      Google's sign-in button
-│   ├── Dashboard.tsx         Loads plans and users
+│   ├── UsersPage.tsx         Loads plans and users
+│   ├── WaitlistPage.tsx      Waitlist signups table with pagination
 │   ├── AddCustomerForm.tsx   Email + plans form
 │   └── CustomersTable.tsx    Users list
 ├── lib/

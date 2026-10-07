@@ -23,8 +23,12 @@ hardcode them. Business context may exist in a private `../CLAUDE.md` outside th
   promise callbacks, or call the loader from event handlers.
 
 ## Structure
-`app/` (layout, page, global CSS) · `components/` (`AdminApp` session state, `Dashboard`, `AddCustomerForm`,
-`CustomersTable`, `GoogleSignIn`) · `lib/` (`api.ts`, `types.ts`, `messages.ts`).
+`app/` (root layout, global CSS, and the `(admin)` route group: its `layout.tsx` wraps every page in `AdminShell`,
+so the login survives navigation; pages are `/` users and `/waitlist`) · `components/` (`AdminShell` login +
+header + nav, `AdminSession` context with `useAdminSession`, `UsersPage`, `WaitlistPage`, `AddCustomerForm`,
+`CustomersTable`, `GoogleSignIn`) · `lib/` (`api.ts`, `types.ts`, `messages.ts`, `sports.ts`).
+To add an admin page: create `app/(admin)/<name>/page.tsx`, add it to `NAV_ITEMS` in `AdminShell`, and get the
+session/`onSessionLost` from `useAdminSession()`.
 
 ## Config and commands
 - `.env.local` (gitignored): `NEXT_PUBLIC_API_URL` (default `http://localhost:8081`) and `NEXT_PUBLIC_GOOGLE_CLIENT_ID`.
@@ -32,7 +36,9 @@ hardcode them. Business context may exist in a private `../CLAUDE.md` outside th
 - `npm run dev` (port 3001; the customer app uses 3000) needs the API running. `npm run lint`, `npm run build`.
   Never run `npm run build` while `npm run dev` runs in the same folder.
 - `http://localhost:3001` must be listed under the Google OAuth client's Authorized JavaScript origins.
-- Not built yet: change a customer's plan/level, remove a customer.
+- The waitlist page shows signups from the public waitlist site via the API's `GET /admin/waitlist` (read-only).
+  `lib/sports.ts` maps the waitlist's sport ids to Hebrew labels (the same labels that public site shows).
+- Not built yet: change a customer's plan/level, remove a customer, turn a waitlist signup into a customer.
 
 ## Before pushing
 Scan the commits for real secret values and business details. Do not push without being asked.

@@ -3,19 +3,13 @@
 import { useCallback, useEffect, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { describeError } from "@/lib/messages";
-import type { Customer, CurrentUser, Plan } from "@/lib/types";
+import type { Customer, Plan } from "@/lib/types";
 import AddCustomerForm from "./AddCustomerForm";
+import { useAdminSession } from "./AdminSession";
 import CustomersTable from "./CustomersTable";
 
-export default function Dashboard({
-  user,
-  onLogout,
-  onSessionLost,
-}: {
-  user: CurrentUser;
-  onLogout: () => void;
-  onSessionLost: () => void;
-}) {
+export default function UsersPage() {
+  const { onSessionLost } = useAdminSession();
   const [plans, setPlans] = useState<Plan[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -66,23 +60,7 @@ export default function Dashboard({
   }, [applyData, handleLoadError]);
 
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-headline-md font-extrabold">
-          FitFam · ניהול משתמשים
-        </h1>
-        <div className="flex items-center gap-3 text-body-md text-text-secondary">
-          <span dir="ltr">{user.email}</span>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-full border border-border-emphasis px-4 py-1.5 text-text-primary transition hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
-          >
-            התנתקות
-          </button>
-        </div>
-      </header>
-
+    <div className="flex flex-col gap-8">
       {loadError && (
         <div
           role="alert"
@@ -112,9 +90,7 @@ export default function Dashboard({
         </>
       )}
 
-      {!loaded && !loadError && (
-        <p className="text-body-md text-text-muted">טוען...</p>
-      )}
+      {!loaded && !loadError && <p className="text-body-md text-text-muted">טוען...</p>}
     </div>
   );
 }

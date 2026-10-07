@@ -38,3 +38,19 @@ export type Customer = {
   firstLoginAt: string | null;
   enrollments: Enrollment[];
 };
+
+export type WaitlistEntry = {
+  id: string;
+  email: string;
+  favoriteSport: string | null;
+  createdAt: string;
+  /** This email already has a user (an account added by an admin). */
+  alreadyUser: boolean;
+};
+
+export type WaitlistPage = {
+  total: number;
+  page: number;
+  size: number;
+  items: WaitlistEntry[];
+};
