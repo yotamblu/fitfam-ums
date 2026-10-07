@@ -48,9 +48,19 @@ export type WaitlistEntry = {
   alreadyUser: boolean;
 };
 
+export type WaitlistSummary = {
+  /** Everyone on the waitlist, whatever the current search/filter is. */
+  total: number;
+  alreadyUsers: number;
+  /** Counts per sport id; "none" = no favorite sport chosen. */
+  bySport: Record<string, number>;
+};
+
 export type WaitlistPage = {
+  /** Rows matching the current search/filter (for paging). */
   total: number;
   page: number;
   size: number;
   items: WaitlistEntry[];
+  summary: WaitlistSummary;
 };

@@ -6,6 +6,11 @@ const SPORT_LABELS: Record<string, string> = {
   strength: "אימוני כוח",
 };
 
+/** Label for a filter/summary key, where "none" means no favorite sport was chosen. */
+export function sportFilterLabel(id: string): string {
+  return id === "none" ? "ללא העדפה" : sportLabel(id);
+}
+
 export function sportLabel(id: string | null): string {
   if (!id) return "—";
   return SPORT_LABELS[id] ?? id;

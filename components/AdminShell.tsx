@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -8,6 +9,10 @@ import { describeError } from "@/lib/messages";
 import type { CurrentUser } from "@/lib/types";
 import { AdminSessionContext } from "./AdminSession";
 import GoogleSignIn from "./GoogleSignIn";
+import Avatar from "./ui/Avatar";
+import Backdrop from "./ui/Backdrop";
+import Button from "./ui/Button";
+import { LogoutIcon } from "./ui/icons";
 
 type View =
   | { kind: "loading" }
@@ -18,55 +23,84 @@ type View =
 
 const NAV_ITEMS = [
   { href: "/", label: "משתמשים" },
+  { href: "/add", label: "הוספת לקוח" },
   { href: "/waitlist", label: "רשימת המתנה" },
 ];
 
+function Logo({ className }: { className: string }) {
+  return (
+    <Image
+      src="/logo-transparent.png"
+      alt="FitFam"
+      width={640}
+      height={573}
+      priority
+      className={className}
+    />
+  );
+}
+
+/** Full-screen card used for login, loading, errors and "no access". */
 function CenteredCard({ children }: { children: React.ReactNode }) {
   return (
-    <main className="flex flex-1 items-center justify-center px-4 py-12">
-      <div className="flex w-full max-w-sm flex-col items-center gap-6 rounded-2xl border border-border bg-surface p-8 text-center">
-        {children}
-      </div>
-    </main>
+    <Backdrop>
+      <main className="flex flex-1 items-center justify-center px-gutter py-12">
+        <div className="animate-rise flex w-full max-w-sm flex-col items-center gap-6 rounded-2xl border border-border bg-surface/90 p-8 text-center shadow-header backdrop-blur-md">
+          {children}
+        </div>
+      </main>
+    </Backdrop>
   );
 }
 
 function Header({ user, onLogout }: { user: CurrentUser; onLogout: () => void }) {
   const pathname = usePathname();
   return (
-    <header className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="font-heading text-headline-md font-extrabold">FitFam · ניהול</h1>
-        <div className="flex items-center gap-3 text-body-md text-text-secondary">
-          <span dir="ltr">{user.email}</span>
-          <button
-            type="button"
-            onClick={onLogout}
-            className="rounded-full border border-border-emphasis px-4 py-1.5 text-text-primary transition hover:bg-surface-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember"
-          >
-            התנתקות
-          </button>
+    <header className="sticky top-0 z-20 border-b border-border bg-surface/80 shadow-header backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-gutter py-3">
+        <div className="flex items-center gap-3">
+          <Logo className="h-9 w-auto" />
+          <span className="rounded-md border border-border-emphasis px-2 py-0.5 text-label-md font-semibold text-text-secondary">
+            ניהול
+          </span>
+        </div>
+
+        <nav
+          aria-label="ניווט ראשי"
+          className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-border bg-well p-1 md:order-none md:w-auto"
+        >
+          {NAV_ITEMS.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={`flex-1 whitespace-nowrap rounded-full px-5 py-1.5 text-center text-body-md font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember md:flex-none ${
+                  active
+                    ? "bg-surface-high text-text-primary shadow-header"
+                    : "text-text-secondary hover:text-text-primary"
+                }`}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <Avatar name={user.displayName ?? user.email} />
+            <span dir="ltr" className="hidden text-body-md text-text-secondary sm:inline">
+              {user.email}
+            </span>
+          </div>
+          <Button variant="ghost" size="sm" onClick={onLogout} aria-label="התנתקות">
+            <LogoutIcon />
+            <span className="hidden sm:inline">התנתקות</span>
+          </Button>
         </div>
       </div>
-      <nav aria-label="ניווט ראשי" className="flex gap-2 border-b border-border pb-3">
-        {NAV_ITEMS.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={`rounded-full px-4 py-1.5 text-body-md font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ember ${
-                active
-                  ? "bg-surface-raised text-text-primary"
-                  : "text-text-secondary hover:text-text-primary"
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
-      </nav>
     </header>
   );
 }
@@ -138,38 +172,39 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     case "loading":
       return (
         <CenteredCard>
-          <p className="text-body-md text-text-muted">טוען...</p>
+          <Logo className="h-14 w-auto" />
+          <p role="status" className="text-body-md text-text-muted">
+            טוען...
+          </p>
         </CenteredCard>
       );
 
     case "error":
       return (
         <CenteredCard>
-          <p role="alert" className="text-body-md text-danger">
+          <Logo className="h-14 w-auto" />
+          <p role="alert" className="text-body-md text-ember">
             {view.message}
           </p>
-          <button
-            type="button"
-            onClick={() => window.location.reload()}
-            className="rounded-full border border-border-emphasis px-5 py-2 text-body-md hover:bg-surface-raised"
-          >
+          <Button variant="secondary" onClick={() => window.location.reload()}>
             נסו שוב
-          </button>
+          </Button>
         </CenteredCard>
       );
 
     case "signed-out":
       return (
         <CenteredCard>
-          <h1 className="font-heading text-headline-md font-extrabold">
-            FitFam · ניהול משתמשים
-          </h1>
-          <p className="text-body-md text-text-secondary">
-            כלי פנימי. התחברו עם חשבון ה-Google של המנהל.
-          </p>
+          <Logo className="h-16 w-auto" />
+          <div className="flex flex-col gap-2">
+            <h1 className="font-heading text-headline-md font-extrabold">ניהול FitFam</h1>
+            <p className="text-body-md text-text-secondary">
+              כלי פנימי לצוות. התחברו עם חשבון ה-Google של המנהל.
+            </p>
+          </div>
           <GoogleSignIn onCredential={handleCredential} />
           {view.notice && (
-            <p role="alert" className="text-body-md text-danger">
+            <p role="alert" className="text-body-md text-ember">
               {view.notice}
             </p>
           )}
@@ -179,27 +214,28 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
     case "no-access":
       return (
         <CenteredCard>
-          <h1 className="font-heading text-headline-md font-extrabold">אין גישה</h1>
-          <p className="text-body-md text-text-secondary">
-            החשבון <span dir="ltr">{view.email}</span> אינו מנהל.
-          </p>
-          <button
-            type="button"
-            onClick={() => void handleLogout()}
-            className="rounded-full border border-border-emphasis px-5 py-2 text-body-md hover:bg-surface-raised"
-          >
+          <Logo className="h-14 w-auto" />
+          <div className="flex flex-col gap-2">
+            <h1 className="font-heading text-headline-md font-extrabold">אין גישה</h1>
+            <p className="text-body-md text-text-secondary">
+              החשבון <span dir="ltr">{view.email}</span> אינו מנהל.
+            </p>
+          </div>
+          <Button variant="secondary" onClick={() => void handleLogout()}>
             התנתקות
-          </button>
+          </Button>
         </CenteredCard>
       );
 
     case "ready":
       return (
         <AdminSessionContext.Provider value={session}>
-          <div className="mx-auto flex w-full max-w-4xl flex-col gap-8 px-4 py-8">
+          <Backdrop>
             <Header user={view.user} onLogout={() => void handleLogout()} />
-            {children}
-          </div>
+            <main className="animate-rise mx-auto flex w-full max-w-6xl flex-col gap-6 px-gutter py-8">
+              {children}
+            </main>
+          </Backdrop>
         </AdminSessionContext.Provider>
       );
   }

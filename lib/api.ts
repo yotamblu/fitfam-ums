@@ -47,8 +47,19 @@ export const api = {
   logout: () => request<void>("/auth/logout", { method: "POST" }),
   listPlans: () => request<Plan[]>("/admin/plans"),
   listUsers: () => request<Customer[]>("/admin/users"),
-  listWaitlist: (page: number, size: number) =>
-    request<WaitlistPage>(`/admin/waitlist?page=${page}&size=${size}`),
+  listWaitlist: (params: {
+    page: number;
+    size: number;
+    q?: string;
+    status?: "all" | "waiting";
+    sport?: string;
+  }) => {
+    const query = new URLSearchParams({ page: String(params.page), size: String(params.size) });
+    if (params.q) query.set("q", params.q);
+    if (params.status === "waiting") query.set("status", "waiting");
+    if (params.sport) query.set("sport", params.sport);
+    return request<WaitlistPage>(`/admin/waitlist?${query.toString()}`);
+  },
   addUser: (email: string, planSlugs: string[]) =>
     request<Customer>("/admin/users", {
       method: "POST",

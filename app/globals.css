@@ -1,10 +1,11 @@
 @import "tailwindcss";
 
-/* Subset of the FitFam "Legacy" palette (fitfam-web docs/design-system/tokens.md) so the admin tool looks like the app. */
+/* Tokens from the customer app (fitfam-web docs/design-system/tokens.md, "Legacy" palette), so the admin tool looks like FitFam. */
 @theme inline {
   --color-canvas: #131314;
   --color-surface: #141416;
   --color-surface-raised: #18181b;
+  --color-surface-high: #201f22;
   --color-well: #0e0e11;
   --color-border: #27272a;
   --color-border-emphasis: #3f3f46;
@@ -13,11 +14,16 @@
   --color-text-muted: #71717a;
   --color-ember: #ff5637;
   --color-volt: #a4d64c;
+  --color-info: #7bd0ff;
   --color-danger: #ff8a7a;
 
   --font-heading: var(--font-heebo), sans-serif;
   --font-body: var(--font-assistant), sans-serif;
 
+  --text-display: 34px;
+  --text-display--line-height: 40px;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 34px;
   --text-headline-md: 22px;
   --text-headline-md--line-height: 28px;
   --text-headline-sm: 18px;
@@ -26,13 +32,55 @@
   --text-body-lg--line-height: 24px;
   --text-body-md: 14px;
   --text-body-md--line-height: 20px;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
   --text-label-md: 12px;
   --text-label-md--line-height: 16px;
+  --text-metric-md: 24px;
+  --text-metric-md--line-height: 28px;
+  --text-metric-display: 38px;
+  --text-metric-display--line-height: 42px;
 
+  --spacing-gutter: 1rem;
+
+  --shadow-header: 0 1px 8px rgba(0, 0, 0, 0.35);
   --shadow-glow-ember: 0 0 18px rgba(255, 86, 55, 0.5);
+  --shadow-glow-volt: 0 0 18px rgba(164, 214, 76, 0.35);
+
+  --animate-rise: rise 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
+
+html,
+body {
+  background-color: var(--color-canvas);
+  color: #e5e2e3;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
-  background: var(--color-canvas);
-  color: var(--color-text-primary);
+  font-family: var(--font-assistant), sans-serif;
+}
+
+::selection {
+  background: rgba(255, 86, 55, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
 }
