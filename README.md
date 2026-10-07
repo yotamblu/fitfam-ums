@@ -141,15 +141,25 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=<Google OAuth client ID>
 - Restart the dev server after changing `.env.local`.
 - Production values live only in the hosting provider's environment variables. Never commit secrets.
 
-## Access control
+## Access control and security
 
-This site manages real customer data. Authorisation is enforced by the API, not by this site: every admin endpoint
-rejects non-admins, so hiding the UI is never the only protection. Still to do before going live:
+Anyone can load the login page, but nobody gets in or sees data without being an admin. The enforcement lives in the
+API, never only in this front end:
 
-- Host it on its own subdomain (the login cookie requires the site and API to share a parent domain).
-- Do not link to it from the customer app.
-- No customer data should be present in this repo.
-
+- **Who is an admin:** only accounts with the admin role in the API's database. Google proves who someone is; the API
+  then checks the role on every single request, so removing or demoting an admin locks them out immediately.
+- **Every admin endpoint** requires that role. Forged, tampered, unsigned and expired logins are rejected (covered by
+  tests and by live attack checks).
+- **Short admin sessions:** an admin login lasts 12 hours (customers: 7 days), and the session cookie is `HttpOnly`,
+  so scripts on the page can never read it.
+- **No server-side code here:** this app is only a browser front end, with no API routes or server actions of its own
+  and no secrets (the only `NEXT_PUBLIC_` values are the API address and Google's public client ID).
+- **Browser protections** (`next.config.ts`): the site cannot be embedded in a frame (clickjacking), base-tag and form
+  hijacking are blocked, MIME sniffing is off, referrers are trimmed, camera/microphone/location are disabled, HSTS is
+  sent, the framework banner is hidden, and crawlers are told to stay away (`robots.txt` + `noindex`).
+- **No dangerous patterns:** no `dangerouslySetInnerHTML`, `eval` or browser storage of tokens; React escapes all data.
+- **Deployment:** host it on its own subdomain, and ideally also behind an extra access gate (for example the hosting
+  provider's deployment protection or a zero-trust proxy) so strangers cannot even load the login page.
 
 ## Open decisions
 

@@ -51,5 +51,15 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
 - Not built yet: change a customer's plan/level, remove a customer. (Waitlist -> customer works as a link to `/add` with
   the email pre-filled; the waitlist row flips to "כבר משתמש" once the customer exists.)
 
+## Security rules (audited 2026-10-07)
+- Authorisation is the API's job (admin role checked on every request). Never rely on hiding UI, and never add
+  pages that show data without the shell's admin check.
+- Do not add server-side code (route handlers, server actions) or secrets to this app without a security review: it
+  is deliberately a pure browser client. Never use `dangerouslySetInnerHTML`/`eval`, never store tokens in browser
+  storage, never put a secret in a `NEXT_PUBLIC_` variable.
+- Keep the headers in `next.config.ts` (frame-ancestors/X-Frame-Options DENY, nosniff, referrer, permissions, HSTS)
+  and `app/robots.ts`. A nonce-based `script-src` CSP is a possible later step (Next injects inline scripts).
+- Do NOT set `Cross-Origin-Opener-Policy: same-origin`: it breaks Google's sign-in popup.
+
 ## Before pushing
 Scan the commits for real secret values and business details. Do not push without being asked.
