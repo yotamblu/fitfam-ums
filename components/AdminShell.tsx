@@ -22,10 +22,18 @@ type View =
   | { kind: "error"; message: string };
 
 const NAV_ITEMS = [
-  { href: "/", label: "משתמשים" },
-  { href: "/add", label: "הוספת לקוח" },
-  { href: "/waitlist", label: "רשימת המתנה" },
+  { href: "/", label: "משתמשים", also: [] as string[] },
+  { href: "/add", label: "הוספת לקוח", also: [] as string[] },
+  { href: "/waitlist", label: "רשימת המתנה", also: [] as string[] },
+  { href: "/plans", label: "תוכניות ואימונים", also: ["/workouts"] },
+  { href: "/exercises", label: "בנק תרגילים", also: [] as string[] },
 ];
+
+/** The page itself, or (for plans) any page below it, like a level or a workout being edited. */
+function isActive(item: (typeof NAV_ITEMS)[number], pathname: string): boolean {
+  if (pathname === item.href) return true;
+  return item.href !== "/" && [item.href, ...item.also].some((base) => pathname.startsWith(`${base}/`));
+}
 
 function Logo({ className }: { className: string }) {
   return (
@@ -70,7 +78,7 @@ function Header({ user, onLogout }: { user: CurrentUser; onLogout: () => void })
           className="order-last flex w-full gap-1 overflow-x-auto rounded-full border border-border bg-well p-1 md:order-none md:w-auto"
         >
           {NAV_ITEMS.map((item) => {
-            const active = pathname === item.href;
+            const active = isActive(item, pathname);
             return (
               <Link
                 key={item.href}

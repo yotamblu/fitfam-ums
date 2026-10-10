@@ -1,4 +1,16 @@
-import type { Customer, CurrentUser, Plan, WaitlistPage } from "./types";
+import type {
+  Customer,
+  CurrentUser,
+  Exercise,
+  ExerciseInput,
+  LevelWorkouts,
+  Plan,
+  PlanTree,
+  Steps,
+  WaitlistPage,
+  Workout,
+  WorkoutInput,
+} from "./types";
 
 // Same-origin by default: app/backend/[...path]/route.ts forwards /backend/* to the API (see API_ORIGIN there).
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "/backend";
@@ -8,6 +20,8 @@ export class ApiError extends Error {
   constructor(
     public readonly status: number,
     public readonly code: string,
+    /** Short technical hint from the API, e.g. the path of an invalid workout field. */
+    public readonly detail?: string,
   ) {
     super(code);
   }
@@ -23,13 +37,15 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 
   if (!response.ok) {
     let code = "unknown";
+    let detail: string | undefined;
     try {
-      const body = (await response.json()) as { error?: string };
+      const body = (await response.json()) as { error?: string; detail?: string };
       code = body.error ?? code;
+      detail = body.detail;
     } catch {
       // body was not JSON; keep "unknown"
     }
-    throw new ApiError(response.status, code);
+    throw new ApiError(response.status, code, detail);
   }
 
   if (response.status === 204) {
@@ -66,4 +82,44 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, planSlugs }),
     }),
+
+  // ---- exercise bank ----
+  listExercises: (params: { sport?: string; q?: string; archived?: boolean } = {}) => {
+    const query = new URLSearchParams();
+    if (params.sport) query.set("sport", params.sport);
+    if (params.q) query.set("q", params.q);
+    if (params.archived) query.set("archived", "true");
+    return request<Exercise[]>(`/admin/exercises?${query.toString()}`);
+  },
+  createExercise: (input: ExerciseInput) =>
+    request<Exercise>("/admin/exercises", { method: "POST", body: JSON.stringify(input) }),
+  updateExercise: (id: string, input: ExerciseInput) =>
+    request<Exercise>(`/admin/exercises/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+  archiveExercise: (id: string) => request<Exercise>(`/admin/exercises/${id}/archive`, { method: "POST" }),
+  restoreExercise: (id: string) => request<Exercise>(`/admin/exercises/${id}/restore`, { method: "POST" }),
+
+  // ---- plans, levels and workouts ----
+  planTree: () => request<PlanTree[]>("/admin/training/plans"),
+  levelWorkouts: (levelId: string) => request<LevelWorkouts>(`/admin/levels/${levelId}/workouts`),
+  reorderWorkouts: (levelId: string, ids: string[]) =>
+    request<LevelWorkouts>(`/admin/levels/${levelId}/workouts/order`, {
+      method: "PUT",
+      body: JSON.stringify({ ids }),
+    }),
+  createWorkout: (levelId: string, input: WorkoutInput) =>
+    request<Workout>(`/admin/levels/${levelId}/workouts`, { method: "POST", body: JSON.stringify(input) }),
+  getWorkout: (id: string) => request<Workout>(`/admin/workouts/${id}`),
+  updateWorkout: (id: string, input: WorkoutInput) =>
+    request<Workout>(`/admin/workouts/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+  deleteWorkout: (id: string) => request<void>(`/admin/workouts/${id}`, { method: "DELETE" }),
+  publishWorkout: (id: string) => request<Workout>(`/admin/workouts/${id}/publish`, { method: "POST" }),
+  unpublishWorkout: (id: string) => request<Workout>(`/admin/workouts/${id}/unpublish`, { method: "POST" }),
+  archiveWorkout: (id: string) => request<Workout>(`/admin/workouts/${id}/archive`, { method: "POST" }),
+  restoreWorkout: (id: string) => request<Workout>(`/admin/workouts/${id}/restore`, { method: "POST" }),
+  duplicateWorkout: (id: string, levelId?: string) =>
+    request<Workout>(`/admin/workouts/${id}/duplicate`, {
+      method: "POST",
+      body: JSON.stringify(levelId ? { levelId } : {}),
+    }),
+  workoutSteps: (id: string) => request<Steps>(`/admin/workouts/${id}/steps`),
 };

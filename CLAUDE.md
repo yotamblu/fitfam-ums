@@ -24,10 +24,10 @@ hardcode them. Business context may exist in a private `../CLAUDE.md` outside th
 
 ## Structure
 `app/` (root layout, theme tokens in `globals.css`, tab icon, and the `(admin)` route group: its `layout.tsx` wraps every
-page in `AdminShell`, so the login survives navigation; pages are `/` users, `/add` add a customer, `/waitlist`) ·
+page in `AdminShell`, so the login survives navigation; pages are `/` users, `/add` add a customer, `/waitlist`, `/plans` and `/plans/[levelId]` (ordered workouts of a plan level), `/workouts/[id]` (editor; `new` with `?levelId=&type=`), `/exercises` (exercise bank)) ·
 `components/` (`AdminShell` login + header + nav, `AdminSession` context with `useAdminSession`, `UsersPage`,
 `AddUserPage`, `WaitlistPage`, `GoogleSignIn`, and `ui/` primitives: `Button`, `Chip`, `StatCard`, `SegmentedControl`,
-`SearchInput`, `PageHeader`, `Avatar`, `Backdrop`, `icons`) · `lib/` (`api.ts`, `types.ts`, `messages.ts`, `sports.ts`) ·
+`SearchInput`, `PageHeader`, `Avatar`, `Backdrop`, `Field`, `icons`; training pages: `PlansPage`, `LevelWorkoutsPage`, `WorkoutEditorPage`, `ExercisesPage`) · `lib/` (`api.ts`, `types.ts`, `messages.ts`, `sports.ts`, `training.ts`: labels, per-exercise-type field lists that mirror the API validator, form <-> API content conversion, Hebrew step descriptions) ·
 `public/` (logo).
 To add an admin page: create `app/(admin)/<name>/page.tsx`, add it to `NAV_ITEMS` in `AdminShell`, and get the
 session/`onSessionLost` from `useAdminSession()`.
@@ -51,7 +51,8 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
 - The waitlist page shows signups from the public waitlist site via the API's `GET /admin/waitlist` (read-only; supports
   `page`, `size`, `q` search, `status=waiting` and `sport` filters, and returns a `summary` with whole-list totals).
   `lib/sports.ts` maps the waitlist's sport ids to Hebrew labels (the same labels that public site shows).
-- Not built yet: change a customer's plan/level, remove a customer. (Waitlist -> customer works as a link to `/add` with
+- The training pages call `/admin/exercises`, `/admin/training/plans`, `/admin/levels/**` and `/admin/workouts/**` (all under the proxy's `admin/` allowlist). Times are stored in seconds; the editor shows minutes for some fields (`unit: "min"` in `lib/training.ts`). API `invalid_content` errors carry a `detail` path that `describeContentError` turns into Hebrew. A new workout is created on first save and the address is swapped with `history.replaceState` (a router navigation would remount the page and lose the notice and preview).
+- Not built yet: change a customer's plan/level, remove a customer, copy a workout to another level (the API supports it). (Waitlist -> customer works as a link to `/add` with
   the email pre-filled; the waitlist row flips to "כבר משתמש" once the customer exists.)
 
 ## Security rules (audited 2026-10-07)
