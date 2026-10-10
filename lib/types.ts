@@ -69,7 +69,7 @@ export type WaitlistPage = {
 
 export type Sport = "running" | "swimming" | "gym" | "calisthenics";
 export type Measure = "reps" | "hold_time" | "distance" | "duration" | "calories" | "max_effort";
-export type BlockStyle = "straight" | "circuit" | "amrap" | "emom" | "for_time";
+export type BlockStyle = "straight" | "circuit" | "amrap" | "emom" | "for_time" | "endurance";
 export type WorkoutStatus = "draft" | "published" | "archived";
 export type WorkoutType = "regular" | "challenge";
 
@@ -139,7 +139,7 @@ export type LevelWorkouts = {
 };
 
 /** The workout content tree as stored by the API (integers only; every time is in seconds). */
-export type ContentLine = { id?: string; exerciseId: string; [field: string]: string | number | undefined };
+export type ContentLine = { id?: string; exerciseId?: string; [field: string]: string | number | undefined };
 export type ContentBlock = {
   id?: string;
   style: BlockStyle;

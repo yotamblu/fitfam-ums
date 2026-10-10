@@ -44,7 +44,7 @@ export const MEASURE_HINTS: Record<Measure, string> = {
   max_effort: "למשל מתח עד כשל: סטים ומנוחה",
 };
 
-export const STYLES: BlockStyle[] = ["straight", "circuit", "amrap", "emom", "for_time"];
+export const STYLES: BlockStyle[] = ["straight", "circuit", "amrap", "emom", "for_time", "endurance"];
 
 export const STYLE_LABELS: Record<BlockStyle, string> = {
   straight: "רגיל (סטים)",
@@ -52,6 +52,7 @@ export const STYLE_LABELS: Record<BlockStyle, string> = {
   amrap: "AMRAP (כמה שיותר בזמן)",
   emom: "EMOM (כל דקה/מרווח)",
   for_time: "על זמן",
+  endurance: "ריצה / שחייה (מקטעים)",
 };
 
 export const STATUS_LABELS: Record<WorkoutStatus, string> = {
@@ -104,6 +105,23 @@ export const LINE_FIELDS: Record<Measure, FieldSpec[]> = {
   max_effort: [SETS, { key: "capSec", label: "תקרת זמן (שניות, לא חובה)", min: 1, max: 7200 }, RPE, REST],
 };
 
+export type Activity = "run" | "swim";
+export const ACTIVITY_LABELS: Record<Activity, string> = { run: "ריצה", swim: "שחייה" };
+export type EnduranceBy = "distance" | "duration";
+
+/** Plain run / swim segment: no bank exercise, either a distance or a duration, then zone, RPE and rest. */
+export function enduranceFields(by: EnduranceBy): FieldSpec[] {
+  return [
+    { key: "reps", label: "חזרות על המקטע", min: 1, max: 100 },
+    by === "distance"
+      ? { key: "distanceM", label: "מרחק (מטרים)", min: 1, max: 100000, required: true }
+      : { key: "durationSec", label: "משך (דקות)", min: 1, max: 14400, unit: "min", required: true },
+    ZONE,
+    RPE,
+    REST,
+  ];
+}
+
 export const BLOCK_FIELDS: Record<BlockStyle, FieldSpec[]> = {
   straight: [],
   circuit: [
@@ -120,6 +138,7 @@ export const BLOCK_FIELDS: Record<BlockStyle, FieldSpec[]> = {
     { key: "rounds", label: "סבבים", min: 1, max: 20 },
     { key: "capSec", label: "תקרת זמן (דקות, לא חובה)", min: 1, max: 7200, unit: "min" },
   ],
+  endurance: [],
 };
 
 // ---- form model: every number is kept as the text the coach typed ----
@@ -130,6 +149,9 @@ export type FormLine = {
   values: Record<string, string>;
   loadHe: string;
   notesHe: string;
+  /** Endurance-block lines only: what is done and whether the segment is measured by distance or time. */
+  activity: Activity;
+  by: EnduranceBy;
 };
 export type FormBlock = {
   id?: string;
@@ -140,12 +162,17 @@ export type FormBlock = {
 };
 export type FormSection = { id?: string; title: string; blocks: FormBlock[] };
 
-export function emptyLine(): FormLine {
-  return { exerciseId: "", values: {}, loadHe: "", notesHe: "" };
+export function emptyLine(activity: Activity = "run"): FormLine {
+  return { exerciseId: "", values: {}, loadHe: "", notesHe: "", activity, by: "duration" };
 }
 
-export function emptyBlock(style: BlockStyle = "straight"): FormBlock {
-  return { style, values: {}, notes: "", lines: [emptyLine()] };
+export function emptyBlock(style: BlockStyle = "straight", activity: Activity = "run"): FormBlock {
+  return { style, values: {}, notes: "", lines: [emptyLine(activity)] };
+}
+
+/** The default run/swim activity for a workout of this sport. */
+export function defaultActivity(sport: Sport): Activity {
+  return sport === "swimming" ? "swim" : "run";
 }
 
 export function emptySection(): FormSection {
@@ -179,17 +206,34 @@ export function contentToForm(content: WorkoutContent, exercises: Map<string, Ex
         notes: block.notes ?? "",
         values: blockValues,
         lines: (block.lines ?? []).map((line) => {
-          const measure = exercises.get(line.exerciseId)?.measure;
+          if (block.style === "endurance") {
+            const by: EnduranceBy = typeof line.distanceM === "number" ? "distance" : "duration";
+            const values: Record<string, string> = {};
+            for (const spec of enduranceFields(by)) values[spec.key] = toText(line[spec.key], spec.unit);
+            return {
+              id: line.id,
+              exerciseId: "",
+              values,
+              loadHe: "",
+              notesHe: typeof line.notesHe === "string" ? line.notesHe : "",
+              activity: line.activity === "swim" ? ("swim" as const) : ("run" as const),
+              by,
+            };
+          }
+          const exerciseId = line.exerciseId ?? "";
+          const measure = exercises.get(exerciseId)?.measure;
           const values: Record<string, string> = {};
           for (const spec of measure ? LINE_FIELDS[measure] : []) {
             values[spec.key] = toText(line[spec.key], spec.unit);
           }
           return {
             id: line.id,
-            exerciseId: line.exerciseId,
+            exerciseId,
             values,
             loadHe: typeof line.loadHe === "string" ? line.loadHe : "",
             notesHe: typeof line.notesHe === "string" ? line.notesHe : "",
+            activity: "run" as const,
+            by: "duration" as const,
           };
         }),
       };
@@ -209,6 +253,21 @@ export function formToContent(sections: FormSection[], exercises: Map<string, Ex
           for (const spec of BLOCK_FIELDS[block.style]) {
             const value = toNumber(block.values[spec.key], spec.unit);
             if (value !== undefined) outBlock[spec.key] = value;
+          }
+          if (block.style === "endurance") {
+            outBlock.lines = block.lines
+              .filter((line) => line.values[line.by === "distance" ? "distanceM" : "durationSec"]?.trim())
+              .map((line) => {
+                const outLine: ContentLine = { activity: line.activity };
+                if (line.id) outLine.id = line.id;
+                for (const spec of enduranceFields(line.by)) {
+                  const value = toNumber(line.values[spec.key], spec.unit);
+                  if (value !== undefined) outLine[spec.key] = value;
+                }
+                if (line.notesHe.trim()) outLine.notesHe = line.notesHe.trim();
+                return outLine;
+              });
+            return outBlock;
           }
           outBlock.lines = block.lines
             .filter((line) => line.exerciseId)
@@ -293,12 +352,15 @@ const REASON_LABELS: Record<string, string> = {
   not_found: "התרגיל לא קיים בבנק",
   below_reps: "הערך של ״עד״ קטן ממספר החזרות",
   duplicate: "מזהה כפול",
+  not_allowed_with_distance: "אפשר למדוד לפי מרחק או לפי זמן, לא שניהם",
   invalid: "הערך אינו תקין",
   empty: "צריך לפחות תרגיל אחד באימון",
 };
 
 const FIELD_LABELS: Record<string, string> = (() => {
-  const labels: Record<string, string> = { exerciseId: "תרגיל", style: "סוג הבלוק", lines: "התרגילים" };
+  const labels: Record<string, string> = { exerciseId: "תרגיל", activity: "ריצה / שחייה", style: "סוג הבלוק", lines: "התרגילים" };
+  labels.distanceM = "מרחק (מטרים)";
+  labels.durationSec = "משך";
   for (const specs of [...Object.values(LINE_FIELDS), ...Object.values(BLOCK_FIELDS)]) {
     for (const spec of specs) labels[spec.key] = spec.label;
   }

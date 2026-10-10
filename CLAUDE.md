@@ -52,6 +52,10 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
   `page`, `size`, `q` search, `status=waiting` and `sport` filters, and returns a `summary` with whole-list totals).
   `lib/sports.ts` maps the waitlist's sport ids to Hebrew labels (the same labels that public site shows).
 - The training pages call `/admin/exercises`, `/admin/training/plans`, `/admin/levels/**` and `/admin/workouts/**` (all under the proxy's `admin/` allowlist). Times are stored in seconds; the editor shows minutes for some fields (`unit: "min"` in `lib/training.ts`). API `invalid_content` errors carry a `detail` path that `describeContentError` turns into Hebrew. A new workout is created on first save and the address is swapped with `history.replaceState` (a router navigation would remount the page and lose the notice and preview).
+- Block style "endurance" ("בלוק ריצה / שחייה" button, or the block-type select): plain run/swim segments with no bank exercise
+  (`EnduranceLineEditor`; per segment: run or swim, measured by time or distance, repeats, zone, RPE, rest). The default
+  activity follows the workout's sport. Form <-> API conversion for it is in `lib/training.ts` (`enduranceFields`,
+  `contentToForm`, `formToContent`); switching a block between endurance and other styles starts its lines fresh.
 - Not built yet: change a customer's plan/level, remove a customer, copy a workout to another level (the API supports it). (Waitlist -> customer works as a link to `/add` with
   the email pre-filled; the waitlist row flips to "כבר משתמש" once the customer exists.)
 

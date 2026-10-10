@@ -6,6 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ApiError, api } from "@/lib/api";
 import { describeError } from "@/lib/messages";
 import {
+  ACTIVITY_LABELS,
   BLOCK_FIELDS,
   LINE_FIELDS,
   MEASURE_LABELS,
@@ -15,12 +16,16 @@ import {
   STYLE_LABELS,
   STYLES,
   contentToForm,
+  defaultActivity,
   describeContentError,
   describeStep,
   emptyBlock,
   emptyLine,
   emptySection,
+  enduranceFields,
   formToContent,
+  type Activity,
+  type EnduranceBy,
   type FormBlock,
   type FormLine,
   type FormSection,
@@ -387,6 +392,7 @@ export default function WorkoutEditorPage() {
               blockCount={section.blocks.length}
               exercises={activeExercises}
               exerciseMap={exerciseMap}
+              activity={defaultActivity(sport)}
               onPatchBlock={(patch) => patchBlock(si, bi, patch)}
               onPatchLine={(li, patch) => patchLine(si, bi, li, patch)}
               onMoveBlock={(direction) => patchSection(si, { blocks: moved(section.blocks, bi, direction) })}
@@ -394,7 +400,7 @@ export default function WorkoutEditorPage() {
             />
           ))}
 
-          <div>
+          <div className="flex flex-wrap gap-2">
             <Button
               variant="secondary"
               size="sm"
@@ -402,6 +408,16 @@ export default function WorkoutEditorPage() {
             >
               <PlusIcon />
               בלוק חדש
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() =>
+                patchSection(si, { blocks: [...section.blocks, emptyBlock("endurance", defaultActivity(sport))] })
+              }
+            >
+              <PlusIcon />
+              בלוק ריצה / שחייה
             </Button>
           </div>
         </section>
@@ -495,6 +511,7 @@ function BlockEditor({
   blockCount,
   exercises,
   exerciseMap,
+  activity,
   onPatchBlock,
   onPatchLine,
   onMoveBlock,
@@ -506,12 +523,14 @@ function BlockEditor({
   blockCount: number;
   exercises: Exercise[];
   exerciseMap: Map<string, Exercise>;
+  activity: Activity;
   onPatchBlock: (patch: Partial<FormBlock>) => void;
   onPatchLine: (li: number, patch: Partial<FormLine>) => void;
   onMoveBlock: (direction: -1 | 1) => void;
   onDeleteBlock: () => void;
 }) {
   const specs = BLOCK_FIELDS[block.style];
+  const endurance = block.style === "endurance";
   return (
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-well p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -520,7 +539,15 @@ function BlockEditor({
             <Select
               id={`b-${si}-${bi}-style`}
               value={block.style}
-              onChange={(e) => onPatchBlock({ style: e.target.value as FormBlock["style"], values: {} })}
+              onChange={(e) => {
+                const style = e.target.value as FormBlock["style"];
+                // run/swim segments and bank exercises are different kinds of lines: start the block's lines fresh
+                if ((style === "endurance") !== endurance) {
+                  onPatchBlock({ style, values: {}, lines: [emptyLine(activity)] });
+                } else {
+                  onPatchBlock({ style, values: {} });
+                }
+              }}
             >
               {STYLES.map((value) => (
                 <option key={value} value={value}>
@@ -576,26 +603,140 @@ function BlockEditor({
         />
       </Field>
 
-      {block.lines.map((line, li) => (
-        <LineEditor
-          key={li}
-          id={`l-${si}-${bi}-${li}`}
-          index={li}
-          line={line}
-          lineCount={block.lines.length}
-          exercises={exercises}
-          exerciseMap={exerciseMap}
-          onPatch={(patch) => onPatchLine(li, patch)}
-          onMove={(direction) => onPatchBlock({ lines: moved(block.lines, li, direction) })}
-          onDelete={() => onPatchBlock({ lines: block.lines.filter((_, i) => i !== li) })}
-        />
-      ))}
+      {block.lines.map((line, li) =>
+        endurance ? (
+          <EnduranceLineEditor
+            key={li}
+            id={`l-${si}-${bi}-${li}`}
+            index={li}
+            line={line}
+            lineCount={block.lines.length}
+            onPatch={(patch) => onPatchLine(li, patch)}
+            onMove={(direction) => onPatchBlock({ lines: moved(block.lines, li, direction) })}
+            onDelete={() => onPatchBlock({ lines: block.lines.filter((_, i) => i !== li) })}
+          />
+        ) : (
+          <LineEditor
+            key={li}
+            id={`l-${si}-${bi}-${li}`}
+            index={li}
+            line={line}
+            lineCount={block.lines.length}
+            exercises={exercises}
+            exerciseMap={exerciseMap}
+            onPatch={(patch) => onPatchLine(li, patch)}
+            onMove={(direction) => onPatchBlock({ lines: moved(block.lines, li, direction) })}
+            onDelete={() => onPatchBlock({ lines: block.lines.filter((_, i) => i !== li) })}
+          />
+        ),
+      )}
 
       <div>
-        <Button variant="secondary" size="sm" onClick={() => onPatchBlock({ lines: [...block.lines, emptyLine()] })}>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onPatchBlock({ lines: [...block.lines, emptyLine(activity)] })}
+        >
           <PlusIcon />
-          תרגיל
+          {endurance ? "מקטע" : "תרגיל"}
         </Button>
+      </div>
+    </div>
+  );
+}
+
+/** One plain run / swim segment: what, measured by distance or time, then zone, RPE and rest. No bank exercise. */
+function EnduranceLineEditor({
+  id,
+  index,
+  line,
+  lineCount,
+  onPatch,
+  onMove,
+  onDelete,
+}: {
+  id: string;
+  index: number;
+  line: FormLine;
+  lineCount: number;
+  onPatch: (patch: Partial<FormLine>) => void;
+  onMove: (direction: -1 | 1) => void;
+  onDelete: () => void;
+}) {
+  const specs = enduranceFields(line.by);
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <div className="flex flex-wrap items-end gap-3">
+          <Field label={`מקטע ${index + 1}`} htmlFor={`${id}-act`}>
+            <Select
+              id={`${id}-act`}
+              value={line.activity}
+              onChange={(e) => onPatch({ activity: e.target.value as Activity })}
+            >
+              {(Object.keys(ACTIVITY_LABELS) as Activity[]).map((value) => (
+                <option key={value} value={value}>
+                  {ACTIVITY_LABELS[value]}
+                </option>
+              ))}
+            </Select>
+          </Field>
+          <Field label="מודדים לפי" htmlFor={`${id}-by`}>
+            <Select
+              id={`${id}-by`}
+              value={line.by}
+              onChange={(e) => {
+                // the other measure's number would be meaningless, so it is dropped
+                const values = { ...line.values };
+                delete values.distanceM;
+                delete values.durationSec;
+                onPatch({ by: e.target.value as EnduranceBy, values });
+              }}
+            >
+              <option value="duration">זמן</option>
+              <option value="distance">מרחק</option>
+            </Select>
+          </Field>
+        </div>
+        <div className="flex items-center gap-1">
+          <Button variant="ghost" size="sm" aria-label="הזזת המקטע למעלה" disabled={index === 0} onClick={() => onMove(-1)}>
+            ↑
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            aria-label="הזזת המקטע למטה"
+            disabled={index === lineCount - 1}
+            onClick={() => onMove(1)}
+          >
+            ↓
+          </Button>
+          <Button variant="ghost" size="sm" disabled={lineCount === 1} onClick={onDelete}>
+            הסרה
+          </Button>
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        {specs.map((spec) => (
+          <Field key={spec.key} label={spec.label + (spec.required ? " *" : "")} htmlFor={`${id}-${spec.key}`}>
+            <NumberInput
+              id={`${id}-${spec.key}`}
+              min={spec.unit === "min" ? 0 : spec.min}
+              max={spec.unit === "min" ? undefined : spec.max}
+              step={spec.unit === "min" ? "any" : 1}
+              value={line.values[spec.key] ?? ""}
+              onChange={(e) => onPatch({ values: { ...line.values, [spec.key]: e.target.value } })}
+            />
+          </Field>
+        ))}
+        <Field label="הערה למקטע" htmlFor={`${id}-notes`} className="col-span-2 sm:col-span-3 lg:col-span-5">
+          <TextInput
+            id={`${id}-notes`}
+            value={line.notesHe}
+            onChange={(e) => onPatch({ notesHe: e.target.value })}
+            maxLength={500}
+          />
+        </Field>
       </div>
     </div>
   );
