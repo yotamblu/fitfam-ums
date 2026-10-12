@@ -8,6 +8,7 @@ import type { PlanTree } from "@/lib/types";
 import { useAdminSession } from "./AdminSession";
 import Chip from "./ui/Chip";
 import { ArrowIcon } from "./ui/icons";
+import { HowItWorks } from "./ui/Help";
 import PageHeader from "./ui/PageHeader";
 
 /** Every plan with its levels; opening a level shows its ordered workouts. */
@@ -42,6 +43,16 @@ export default function PlansPage() {
         title="תוכניות ואימונים"
         description="בוחרים תוכנית ורמה, ושם מוסיפים ומסדרים את האימונים לפי הסדר שבו הלקוחות יעברו אותם."
       />
+
+      <HowItWorks id="plans" guideHref="/guide#flow">
+        <p>כאן מנהלים את התוכן של כל תוכנית. כל כרטיס הוא תוכנית, ובתוכו הרמות שלה. <b>לוחצים על רמה</b> כדי לראות את האימונים שלה, להוסיף אימון, ולסדר אותם.</p>
+        <ul className="list-disc ps-6">
+          <li><b>״N אימונים״</b>: כמה אימונים יש ברמה, כולל טיוטות.</li>
+          <li><b>״N מפורסמים״</b>: כמה מהם הלקוחות רואים בפועל. אימון שלא פורסם הוא טיוטה, שרק אתם רואים.</li>
+          <li><b>״חסר אתגר״</b>: לרמה אין אתגר מעבר רמה. בלי אתגר מפורסם לקוח לא יכול להתקדם מהרמה הזו.</li>
+        </ul>
+        <p>הסדר הנכון: קודם מוסיפים תרגילים ל<b>בנק התרגילים</b>, ואז בונים אימונים ברמה, ובסוף מפרסמים.</p>
+      </HowItWorks>
 
       {error && (
         <p role="alert" className="text-body-md text-ember">

@@ -11,6 +11,7 @@ import Button, { buttonClasses } from "./ui/Button";
 import Chip from "./ui/Chip";
 import { PlusIcon } from "./ui/icons";
 import PageHeader from "./ui/PageHeader";
+import { HowItWorks } from "./ui/Help";
 import SearchInput from "./ui/SearchInput";
 import SegmentedControl from "./ui/SegmentedControl";
 import StatCard from "./ui/StatCard";
@@ -134,6 +135,15 @@ export default function UsersPage() {
           </Link>
         }
       />
+
+      <HowItWorks id="users" guideHref="/guide#customers">
+        <ul className="list-disc ps-6">
+          <li><b>פעילים:</b> לקוחות שהתחברו לפחות פעם אחת.</li>
+          <li><b>הוזמנו:</b> נוספו אבל עוד לא התחברו. אם לקוח אומר שהוא לא מצליח להיכנס, בדקו כאן שהמייל שלו קיים ושהוא כתוב נכון.</li>
+          <li><b>מנהלים:</b> אתם והשותפים. למנהלים יש גישה גם למערכת הניהול הזו.</li>
+        </ul>
+        <p>מוסיפים לקוח חדש במסך <b>הוספת לקוח</b>. אפשר לסנן לפי סטטוס ולחפש לפי מייל או שם.</p>
+      </HowItWorks>
 
       {error && (
         <div

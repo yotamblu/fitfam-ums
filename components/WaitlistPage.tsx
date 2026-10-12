@@ -11,6 +11,7 @@ import Button, { buttonClasses } from "./ui/Button";
 import Chip from "./ui/Chip";
 import { ArrowIcon, ChevronIcon } from "./ui/icons";
 import PageHeader from "./ui/PageHeader";
+import { HowItWorks } from "./ui/Help";
 import SearchInput from "./ui/SearchInput";
 import SegmentedControl from "./ui/SegmentedControl";
 import StatCard from "./ui/StatCard";
@@ -85,6 +86,15 @@ export default function WaitlistPage() {
         title="רשימת המתנה"
         description="מי נרשם באתר ההמתנה ומי כבר קיבל גישה. כשמוכנים, מוסיפים אותם כלקוחות."
       />
+
+      <HowItWorks id="waitlist" guideHref="/guide#customers">
+        <p>אלה האנשים שנרשמו באתר ההמתנה הציבורי. הרשימה רק לקריאה: היא לא נותנת להם גישה לאפליקציה.</p>
+        <ul className="list-disc ps-6">
+          <li>כדי לתת גישה לנרשם, לוחצים <b>הוספה כלקוח</b> בשורה שלו. המייל שלו יתמלא בעצמו, ונשאר לבחור תוכניות.</li>
+          <li><b>״כבר משתמש״</b> אומר שהמייל כבר נוסף כלקוח.</li>
+          <li><b>״ממתינים בלבד״</b> מסתיר את מי שכבר קיבל גישה. אפשר גם לסנן לפי הענף שהם בחרו.</li>
+        </ul>
+      </HowItWorks>
 
       {current?.error && (
         <div

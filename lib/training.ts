@@ -2,6 +2,7 @@
 // The field lists mirror WorkoutContentValidator in fitfam-api: which fields a line may carry depends on how its
 // exercise is measured. The API re-checks everything; this only decides which inputs to show.
 
+import { FIELD_HELP } from "./help";
 import type {
   BlockStyle,
   ContentBlock,
@@ -383,4 +384,41 @@ export function describeContentError(detail: string | undefined): string | null 
   const reasonLabel = REASON_LABELS[reason] ?? reason;
   const where = place.length ? `${place.join(", ")}: ` : "";
   return `${where}${fieldLabel ? `${fieldLabel} — ` : ""}${reasonLabel}`;
+}
+
+/** The "?" explanation for a numeric field of a block or a line, picked from what the field is and how the line is measured. */
+export function specHelp(spec: FieldSpec, context: { measure?: Measure; style?: BlockStyle } = {}): string | undefined {
+  switch (spec.key) {
+    case "sets":
+      return FIELD_HELP.sets;
+    case "reps":
+      return context.measure === "reps" ? FIELD_HELP.reps : FIELD_HELP.repeat;
+    case "repsMax":
+      return FIELD_HELP.repsMax;
+    case "distanceM":
+      return FIELD_HELP.distance;
+    case "calories":
+      return FIELD_HELP.calories;
+    case "zone":
+      return FIELD_HELP.zone;
+    case "rpe":
+      return FIELD_HELP.rpe;
+    case "restSec":
+      return FIELD_HELP.rest;
+    case "rounds":
+      return FIELD_HELP.rounds;
+    case "restBetweenLinesSec":
+      return FIELD_HELP.restBetweenLines;
+    case "restBetweenRoundsSec":
+      return FIELD_HELP.restBetweenRounds;
+    case "intervalSec":
+      return FIELD_HELP.interval;
+    case "capSec":
+      return spec.unit === "min" ? "תקרת זמן אם רוצים להגביל, בדקות. לא חובה." : FIELD_HELP.capSeconds;
+    case "durationSec":
+      if (context.style === "amrap" || context.style === "emom") return "כמה זמן נמשך הבלוק כולו, בדקות. חובה.";
+      return spec.unit === "min" ? FIELD_HELP.durationMinutes : FIELD_HELP.durationSeconds;
+    default:
+      return undefined;
+  }
 }

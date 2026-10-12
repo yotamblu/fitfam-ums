@@ -19,6 +19,7 @@ import {
   defaultActivity,
   describeContentError,
   describeStep,
+  specHelp,
   emptyBlock,
   emptyLine,
   emptySection,
@@ -35,6 +36,8 @@ import { useAdminSession } from "./AdminSession";
 import Button, { buttonClasses } from "./ui/Button";
 import Chip from "./ui/Chip";
 import { Field, NumberInput, Select, TextArea, TextInput } from "./ui/Field";
+import { HowItWorks, InfoBox } from "./ui/Help";
+import { FIELD_HELP, STYLE_HELP } from "@/lib/help";
 import { PlusIcon } from "./ui/icons";
 import PageHeader from "./ui/PageHeader";
 
@@ -290,9 +293,21 @@ export default function WorkoutEditorPage() {
         }
       />
 
+      <HowItWorks id="workout-editor" guideHref="/guide#workouts">
+        <p>האימון בנוי משלוש שכבות: <b>מקטעים</b> (חימום, עיקרי, קירור), בתוך כל מקטע <b>בלוקים</b> (דרך העבודה: בסטים, במעגל, לפי זמן), ובתוך כל בלוק <b>תרגילים</b> שבוחרים מהבנק ומוסיפים להם מספרים.</p>
+        <ol className="list-decimal ps-6">
+          <li>ממלאים למעלה את שם האימון, הענף והמשך המשוער.</li>
+          <li>בכל מקטע בוחרים סגנון לבלוק (מתחת לשדה מופיע הסבר), ואז מוסיפים תרגילים.</li>
+          <li>בוחרים תרגיל מהבנק ומשלימים את המספרים. שדה עם כוכבית * הוא חובה. ליד כל שדה יש <b>?</b> שמסביר אותו.</li>
+          <li>לוחצים <b>שמירה ותצוגת שלבים</b> כדי לראות בדיוק איך הלקוח יעבור את האימון.</li>
+          <li>כשהכול נכון לוחצים <b>שמירה ופרסום</b>. עד אז האימון טיוטה והלקוחות לא רואים אותו.</li>
+        </ol>
+        {type === "challenge" && <p>זה <b>אתגר מעבר רמה</b>: הוא האימון האחרון ברמה, וכשהלקוח עובר אותו הוא עובר לרמה הבאה.</p>}
+      </HowItWorks>
+
       {/* details */}
       <section className="grid gap-4 rounded-2xl border border-border bg-surface p-6 md:grid-cols-2">
-        <Field label="שם האימון" htmlFor="w-title" hint="חובה כדי לפרסם.">
+        <Field label="שם האימון" htmlFor="w-title" hint="חובה כדי לפרסם." help={FIELD_HELP.workoutTitle}>
           <TextInput
             id="w-title"
             value={titleHe}
@@ -302,7 +317,7 @@ export default function WorkoutEditorPage() {
           />
         </Field>
         <div className="grid grid-cols-2 gap-4">
-          <Field label="ענף" htmlFor="w-sport">
+          <Field label="ענף" htmlFor="w-sport" help={FIELD_HELP.workoutSport}>
             <Select id="w-sport" value={sport} onChange={(e) => setSport(e.target.value as Sport)}>
               {SPORTS.map((value) => (
                 <option key={value} value={value}>
@@ -311,7 +326,7 @@ export default function WorkoutEditorPage() {
               ))}
             </Select>
           </Field>
-          <Field label="משך משוער (דקות)" htmlFor="w-minutes">
+          <Field label="משך משוער (דקות)" htmlFor="w-minutes" help={FIELD_HELP.workoutMinutes}>
             <NumberInput
               id="w-minutes"
               min={1}
@@ -321,7 +336,7 @@ export default function WorkoutEditorPage() {
             />
           </Field>
         </div>
-        <Field label="תיאור קצר (לא חובה)" htmlFor="w-desc" className={type === "challenge" ? "" : "md:col-span-2"}>
+        <Field label="תיאור קצר (לא חובה)" htmlFor="w-desc" help={FIELD_HELP.workoutDescription} className={type === "challenge" ? "" : "md:col-span-2"}>
           <TextArea
             id="w-desc"
             value={descriptionHe}
@@ -333,7 +348,8 @@ export default function WorkoutEditorPage() {
           <Field
             label="מטרת האתגר (מה צריך לעשות כדי לעבור)"
             htmlFor="w-goal"
-            hint="הלקוח רואה את זה ולוחץ ״עברתי״ או ״לא עברתי״. חובה כדי לפרסם."
+            hint="הלקוח רואה את זה ולוחץ ״עברתי״ או ״עוד לא״. חובה כדי לפרסם."
+            help={FIELD_HELP.challengeGoal}
           >
             <TextArea id="w-goal" value={goalHe} onChange={(e) => setGoalHe(e.target.value)} maxLength={1000} />
           </Field>
@@ -344,7 +360,7 @@ export default function WorkoutEditorPage() {
       {sections.map((section, si) => (
         <section key={si} className="flex flex-col gap-4 rounded-2xl border border-border bg-surface p-6">
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <Field label={`מקטע ${si + 1}`} htmlFor={`s-${si}-title`} className="min-w-52 flex-1">
+            <Field label={`מקטע ${si + 1}`} htmlFor={`s-${si}-title`} help={FIELD_HELP.section} className="min-w-52 flex-1">
               <TextInput
                 id={`s-${si}-title`}
                 value={section.title}
@@ -438,6 +454,16 @@ export default function WorkoutEditorPage() {
             {notice.detail && <p className="text-body-md text-text-secondary">{notice.detail}</p>}
           </div>
         )}
+        <details className="text-body-sm text-text-secondary">
+          <summary className="cursor-pointer font-semibold text-info">מה עושים הכפתורים?</summary>
+          <ul className="mt-2 flex flex-col gap-1 ps-4">
+            <li><b>שמירה:</b> שומרת את השינויים. אימון שעוד לא פורסם נשאר טיוטה שרק אתם רואים.</li>
+            <li><b>שמירה ופרסום:</b> שומרת ומפרסמת. הלקוחות רואים את האימון מיד, במקום שלו ברשימה. הפרסום נכשל אם חסר שם, חסרה מטרה באתגר, או שיש שדה חובה ריק.</li>
+            <li><b>הסרה מפרסום:</b> מחזירה אימון מפורסם לטיוטה והלקוחות מפסיקים לראות אותו.</li>
+            <li><b>שמירה ותצוגת שלבים:</b> שומרת ומראה למטה את רשימת השלבים שהלקוח יעבור בליווי, כולל המנוחות.</li>
+            <li><b>מחיקת הטיוטה:</b> מוחקת אימון שלא פורסם לצמיתות. אימון שפורסם אפשר רק להעביר לארכיון, מרשימת האימונים של הרמה.</li>
+          </ul>
+        </details>
         <div className="flex flex-wrap items-center gap-3">
           <Button size="lg" onClick={onSave} disabled={busy}>
             {busy ? "שומר..." : "שמירה"}
@@ -535,7 +561,7 @@ function BlockEditor({
     <div className="flex flex-col gap-4 rounded-xl border border-border bg-well p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
-          <Field label={`בלוק ${bi + 1}`} htmlFor={`b-${si}-${bi}-style`}>
+          <Field label={`בלוק ${bi + 1}`} htmlFor={`b-${si}-${bi}-style`} help={FIELD_HELP.blockStyle}>
             <Select
               id={`b-${si}-${bi}-style`}
               value={block.style}
@@ -557,7 +583,7 @@ function BlockEditor({
             </Select>
           </Field>
           {specs.map((spec) => (
-            <Field key={spec.key} label={spec.label} htmlFor={`b-${si}-${bi}-${spec.key}`}>
+            <Field key={spec.key} label={spec.label + (spec.required ? " *" : "")} htmlFor={`b-${si}-${bi}-${spec.key}`} help={specHelp(spec, { style: block.style })}>
               <NumberInput
                 id={`b-${si}-${bi}-${spec.key}`}
                 className="w-40"
@@ -594,7 +620,19 @@ function BlockEditor({
         </div>
       </div>
 
-      <Field label="הערה לבלוק (לא חובה)" htmlFor={`b-${si}-${bi}-notes`}>
+      <InfoBox title={STYLE_LABELS[block.style]}>
+        <p>{STYLE_HELP[block.style].what}</p>
+        <p className="mt-1.5 text-text-secondary">
+          <b>מה ממלאים: </b>
+          {STYLE_HELP[block.style].fields}
+        </p>
+        <p className="mt-1.5 text-text-secondary">
+          <b>דוגמה: </b>
+          {STYLE_HELP[block.style].example}
+        </p>
+      </InfoBox>
+
+      <Field label="הערה לבלוק (לא חובה)" htmlFor={`b-${si}-${bi}-notes`} help={FIELD_HELP.blockNotes}>
         <TextInput
           id={`b-${si}-${bi}-notes`}
           value={block.notes}
@@ -668,7 +706,7 @@ function EnduranceLineEditor({
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex flex-wrap items-end gap-3">
-          <Field label={`מקטע ${index + 1}`} htmlFor={`${id}-act`}>
+          <Field label={`מקטע ${index + 1}`} htmlFor={`${id}-act`} help={FIELD_HELP.activity}>
             <Select
               id={`${id}-act`}
               value={line.activity}
@@ -681,7 +719,7 @@ function EnduranceLineEditor({
               ))}
             </Select>
           </Field>
-          <Field label="מודדים לפי" htmlFor={`${id}-by`}>
+          <Field label="מודדים לפי" htmlFor={`${id}-by`} help={FIELD_HELP.measuredBy}>
             <Select
               id={`${id}-by`}
               value={line.by}
@@ -718,7 +756,7 @@ function EnduranceLineEditor({
       </div>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
         {specs.map((spec) => (
-          <Field key={spec.key} label={spec.label + (spec.required ? " *" : "")} htmlFor={`${id}-${spec.key}`}>
+          <Field key={spec.key} label={spec.label + (spec.required ? " *" : "")} htmlFor={`${id}-${spec.key}`} help={specHelp(spec)}>
             <NumberInput
               id={`${id}-${spec.key}`}
               min={spec.unit === "min" ? 0 : spec.min}
@@ -729,7 +767,7 @@ function EnduranceLineEditor({
             />
           </Field>
         ))}
-        <Field label="הערה למקטע" htmlFor={`${id}-notes`} className="col-span-2 sm:col-span-3 lg:col-span-5">
+        <Field label="הערה למקטע" htmlFor={`${id}-notes`} help={FIELD_HELP.lineNotes} className="col-span-2 sm:col-span-3 lg:col-span-5">
           <TextInput
             id={`${id}-notes`}
             value={line.notesHe}
@@ -769,7 +807,7 @@ function LineEditor({
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <Field label={`תרגיל ${index + 1}`} htmlFor={`${id}-ex`} className="min-w-60 flex-1">
+        <Field label={`תרגיל ${index + 1}`} htmlFor={`${id}-ex`} help={FIELD_HELP.lineExercise} className="min-w-60 flex-1">
           <Select
             id={`${id}-ex`}
             value={line.exerciseId}
@@ -815,7 +853,7 @@ function LineEditor({
       {selected && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           {specs.map((spec) => (
-            <Field key={spec.key} label={spec.label + (spec.required ? " *" : "")} htmlFor={`${id}-${spec.key}`}>
+            <Field key={spec.key} label={spec.label + (spec.required ? " *" : "")} htmlFor={`${id}-${spec.key}`} help={specHelp(spec, { measure: selected.measure })}>
               <NumberInput
                 id={`${id}-${spec.key}`}
                 min={spec.unit === "min" ? 0 : spec.min}
@@ -830,6 +868,7 @@ function LineEditor({
             <Field
               label="עומס / משקל (טקסט חופשי)"
               htmlFor={`${id}-load`}
+              help={FIELD_HELP.load}
               className="col-span-2 sm:col-span-3 lg:col-span-2"
             >
               <TextInput
@@ -841,7 +880,7 @@ function LineEditor({
               />
             </Field>
           )}
-          <Field label="הערה לתרגיל" htmlFor={`${id}-notes`} className="col-span-2 sm:col-span-3 lg:col-span-5">
+          <Field label="הערה לתרגיל" htmlFor={`${id}-notes`} help={FIELD_HELP.lineNotes} className="col-span-2 sm:col-span-3 lg:col-span-5">
             <TextInput
               id={`${id}-notes`}
               value={line.notesHe}

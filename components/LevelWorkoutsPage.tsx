@@ -11,6 +11,7 @@ import { useAdminSession } from "./AdminSession";
 import Button, { buttonClasses } from "./ui/Button";
 import Chip from "./ui/Chip";
 import { PlusIcon } from "./ui/icons";
+import { HowItWorks } from "./ui/Help";
 import PageHeader from "./ui/PageHeader";
 
 /** The ordered workouts of one plan level: reorder, publish, duplicate, archive. The challenge is always last. */
@@ -145,6 +146,19 @@ export default function LevelWorkoutsPage() {
           </div>
         }
       />
+
+      <HowItWorks id="level-workouts" guideHref="/guide#publishing">
+        <p>הרשימה הזו היא <b>הסדר המדויק</b> שבו הלקוחות עוברים את האימונים. הם חייבים ללכת לפי הסדר: רק האימון הבא פתוח, והשאר נעולים. <b>האתגר תמיד אחרון</b>, ואי אפשר להזיז אותו.</p>
+        <p><b>איך מסדרים:</b> גוררים אימון למקום אחר, או לוחצים על החצים ↑ ↓, או כותבים בתיבה את המספר של המקום החדש ולוחצים Enter.</p>
+        <ul className="list-disc ps-6">
+          <li><b>עריכה:</b> פותחת את האימון. שינוי באימון שפורסם נראה ללקוחות מיד.</li>
+          <li><b>פרסום / הסרה מפרסום:</b> פרסום מראה את האימון ללקוחות. הסרה מחזירה אותו לטיוטה.</li>
+          <li><b>שכפול:</b> יוצר עותק כטיוטה בסוף הרשימה, כדי לא להתחיל מאפס.</li>
+          <li><b>מחיקה:</b> מוחקת טיוטה לצמיתות. <b>ארכיון:</b> לאימון שפורסם. הוא נעלם מהלקוחות, ואפשר לשחזר אותו מהקטע ״בארכיון״ כטיוטה.</li>
+          <li><b>אימון חדש / אתגר מעבר רמה:</b> מוסיפים אימון רגיל או את האתגר של הרמה (אחד בלבד לכל רמה).</li>
+        </ul>
+        <p>הסימונים: <b>טיוטה</b> (עוד לא מפורסם), <b>מפורסם</b> (הלקוחות רואים), <b>בארכיון</b> (הוסר).</p>
+      </HowItWorks>
 
       {error && (
         <p role="alert" className="text-body-md text-ember">

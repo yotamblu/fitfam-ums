@@ -24,7 +24,7 @@ hardcode them. Business context may exist in a private `../CLAUDE.md` outside th
 
 ## Structure
 `app/` (root layout, theme tokens in `globals.css`, tab icon, and the `(admin)` route group: its `layout.tsx` wraps every
-page in `AdminShell`, so the login survives navigation; pages are `/` users, `/add` add a customer, `/waitlist`, `/plans` and `/plans/[levelId]` (ordered workouts of a plan level), `/workouts/[id]` (editor; `new` with `?levelId=&type=`), `/exercises` (exercise bank)) ·
+page in `AdminShell`, so the login survives navigation; pages are `/` users, `/add` add a customer, `/waitlist`, `/plans` and `/plans/[levelId]` (ordered workouts of a plan level), `/workouts/[id]` (editor; `new` with `?levelId=&type=`), `/exercises` (exercise bank), `/guide` (the coach guide)) ·
 `components/` (`AdminShell` login + header + nav, `AdminSession` context with `useAdminSession`, `UsersPage`,
 `AddUserPage`, `WaitlistPage`, `GoogleSignIn`, and `ui/` primitives: `Button`, `Chip`, `StatCard`, `SegmentedControl`,
 `SearchInput`, `PageHeader`, `Avatar`, `Backdrop`, `Field`, `icons`; training pages: `PlansPage`, `LevelWorkoutsPage`, `WorkoutEditorPage`, `ExercisesPage`) · `lib/` (`api.ts`, `types.ts`, `messages.ts`, `sports.ts`, `training.ts`: labels, per-exercise-type field lists that mirror the API validator, form <-> API content conversion, Hebrew step descriptions) ·
@@ -56,6 +56,7 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
   (`EnduranceLineEditor`; per segment: run or swim, measured by time or distance, repeats, zone, RPE, rest). The default
   activity follows the workout's sport. Form <-> API conversion for it is in `lib/training.ts` (`enduranceFields`,
   `contentToForm`, `formToContent`); switching a block between endurance and other styles starts its lines fresh.
+- Coach help: `lib/help.ts` holds every explanation once (measures, block styles, per-field help, troubleshooting) and is used by the `/guide` page (`GuidePage`), the `?` button on form fields (`Field` takes `help`/`hint`) and the per-page "how it works" panels (`HowItWorks`/`InfoBox`/`Example` in `components/ui/Help.tsx`; open state remembered in localStorage `ums.help.<id>`). `specHelp` in `lib/training.ts` maps a numeric field to its help text. Exercise form shows a live preview of the description (numbered steps) and cues (checklist). Keep these texts free of plan/level names and prices (public repo). When a field or rule changes in the editor or API, update `lib/help.ts` too.
 - Not built yet: change a customer's plan/level, remove a customer, copy a workout to another level (the API supports it). (Waitlist -> customer works as a link to `/add` with
   the email pre-filled; the waitlist row flips to "כבר משתמש" once the customer exists.)
 

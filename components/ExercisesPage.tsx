@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { ApiError, api } from "@/lib/api";
 import { describeError } from "@/lib/messages";
-import { MEASURE_HINTS, MEASURE_LABELS, MEASURES, SPORT_LABELS, SPORTS } from "@/lib/training";
+import { FIELD_HELP, MEASURE_HELP } from "@/lib/help";
+import { MEASURE_LABELS, MEASURES, SPORT_LABELS, SPORTS } from "@/lib/training";
 import type { Exercise, ExerciseInput, Measure, Sport } from "@/lib/types";
 import { useAdminSession } from "./AdminSession";
 import Button from "./ui/Button";
 import Chip from "./ui/Chip";
 import { Field, Select, TextArea, TextInput } from "./ui/Field";
 import { PlusIcon } from "./ui/icons";
+import { HowItWorks, InfoBox } from "./ui/Help";
 import PageHeader from "./ui/PageHeader";
 import SearchInput from "./ui/SearchInput";
 import SegmentedControl from "./ui/SegmentedControl";
@@ -130,6 +132,17 @@ export default function ExercisesPage() {
           </Button>
         }
       />
+
+      <HowItWorks id="exercises" guideHref="/guide#exercises">
+        <p>בנק התרגילים הוא רשימת כל התרגילים שאפשר להוסיף לאימונים. כותבים תרגיל <b>פעם אחת</b>, ואז בוחרים אותו בכל אימון שרוצים.</p>
+        <ol className="list-decimal ps-6">
+          <li>לוחצים <b>תרגיל חדש</b> וממלאים שם, ענף, ו״איך מודדים את התרגיל״ (חזרות, זמן, מרחק ועוד).</li>
+          <li>ב״תיאור״ כותבים איך מבצעים, <b>שלב אחד בכל שורה</b>. הלקוח רואה את זה כשלבים ממוספרים בעמוד התרגיל.</li>
+          <li>ב״דגשים״ כותבים נקודות חשובות, <b>נקודה אחת בכל שורה</b>. הלקוח רואה רשימה עם וי.</li>
+          <li>אפשר להוסיף קישור לסרטון YouTube. זה לא חובה, ואפשר להוסיף אחר כך.</li>
+        </ol>
+        <p>אי אפשר למחוק תרגיל. כדי להפסיק להשתמש בו לוחצים <b>ארכיון</b>: הוא נעלם מהבחירה באימונים חדשים, אבל נשאר באימונים שכבר משתמשים בו, ואפשר לשחזר אותו.</p>
+      </HowItWorks>
 
       {editing && (
         <ExerciseForm
@@ -279,7 +292,7 @@ function ExerciseForm({
       <h2 className="font-heading text-headline-md font-bold">{exercise ? "עריכת תרגיל" : "תרגיל חדש"}</h2>
 
       <div className="grid gap-4 md:grid-cols-2">
-        <Field label="שם התרגיל" htmlFor="ex-name">
+        <Field label="שם התרגיל" htmlFor="ex-name" help={FIELD_HELP.exerciseName}>
           <TextInput
             id="ex-name"
             value={form.nameHe}
@@ -288,7 +301,7 @@ function ExerciseForm({
             maxLength={100}
           />
         </Field>
-        <Field label="ענף" htmlFor="ex-sport">
+        <Field label="ענף" htmlFor="ex-sport" help={FIELD_HELP.exerciseSport}>
           <Select id="ex-sport" value={form.sport} onChange={(e) => set("sport", e.target.value as Sport)}>
             {SPORTS.map((value) => (
               <option key={value} value={value}>
@@ -297,7 +310,12 @@ function ExerciseForm({
             ))}
           </Select>
         </Field>
-        <Field label="איך מודדים את התרגיל" htmlFor="ex-measure" hint={MEASURE_HINTS[form.measure]}>
+        <Field
+          label="איך מודדים את התרגיל"
+          htmlFor="ex-measure"
+          help={FIELD_HELP.exerciseMeasure}
+          hint={`${MEASURE_HELP[form.measure].what} באימון תמלאו: ${MEASURE_HELP[form.measure].asks} דוגמאות: ${MEASURE_HELP[form.measure].example}`}
+        >
           <Select
             id="ex-measure"
             value={form.measure}
@@ -314,6 +332,7 @@ function ExerciseForm({
           label="קישור לסרטון YouTube (לא חובה)"
           htmlFor="ex-video"
           hint="אפשר להשאיר ריק ולהוסיף אחר כך."
+          help={FIELD_HELP.video}
         >
           <TextInput
             id="ex-video"
@@ -325,7 +344,7 @@ function ExerciseForm({
             maxLength={300}
           />
         </Field>
-        <Field label="ציוד (מופרד בפסיקים)" htmlFor="ex-equipment">
+        <Field label="ציוד (מופרד בפסיקים)" htmlFor="ex-equipment" help={FIELD_HELP.equipment}>
           <TextInput
             id="ex-equipment"
             value={equipmentText}
@@ -333,7 +352,7 @@ function ExerciseForm({
             placeholder="מוט מתח, גומיות"
           />
         </Field>
-        <Field label="שרירים עיקריים (מופרד בפסיקים)" htmlFor="ex-muscles">
+        <Field label="שרירים עיקריים (מופרד בפסיקים)" htmlFor="ex-muscles" help={FIELD_HELP.muscles}>
           <TextInput
             id="ex-muscles"
             value={musclesText}
@@ -341,22 +360,27 @@ function ExerciseForm({
             placeholder="חזה, כתפיים"
           />
         </Field>
-        <Field label="תיאור (לא חובה)" htmlFor="ex-desc" className="md:col-span-2">
+        <Field label="איך מבצעים: תיאור (לא חובה)" htmlFor="ex-desc" help={FIELD_HELP.description} hint="שלב אחד בכל שורה (Enter בין שלבים)." className="md:col-span-2">
           <TextArea
             id="ex-desc"
             value={form.descriptionHe}
             onChange={(e) => set("descriptionHe", e.target.value)}
             maxLength={2000}
+            placeholder={"עומדים עם הרגליים ברוחב הכתפיים.\nמורידים את הישבן אחורה ולמטה.\nדוחפים דרך העקבים וחוזרים לעמידה."}
           />
         </Field>
-        <Field label="דגשים לביצוע (לא חובה)" htmlFor="ex-cues" className="md:col-span-2">
+        <Field label="דגשים לביצוע (לא חובה)" htmlFor="ex-cues" help={FIELD_HELP.cues} hint="נקודה אחת בכל שורה." className="md:col-span-2">
           <TextArea
             id="ex-cues"
             value={form.cuesHe}
             onChange={(e) => set("cuesHe", e.target.value)}
             maxLength={2000}
+            placeholder={"הגב נשאר ישר\nהברכיים בכיוון הבהונות"}
           />
         </Field>
+        <div className="md:col-span-2">
+          <HowToPreview description={form.descriptionHe} cues={form.cuesHe} />
+        </div>
       </div>
 
       {error && (
@@ -373,5 +397,47 @@ function ExerciseForm({
         </Button>
       </div>
     </form>
+  );
+}
+
+/** "How the customer will see it": the description as numbered steps and the cues as a checklist, as you type. */
+function HowToPreview({ description, cues }: { description: string; cues: string }) {
+  const lines = (text: string) =>
+    text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean);
+  const steps = lines(description);
+  const points = lines(cues);
+  if (steps.length === 0 && points.length === 0) {
+    return <InfoBox title="תצוגה מקדימה">כשתכתבו תיאור ודגשים תראו כאן איך הלקוח יראה אותם: התיאור כשלבים ממוספרים והדגשים כרשימה עם וי.</InfoBox>;
+  }
+  return (
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-well p-4">
+      <p className="text-label-md font-semibold text-text-muted">כך הלקוח יראה את זה</p>
+      {steps.length > 0 &&
+        (steps.length === 1 ? (
+          <p className="text-body-md leading-6">{steps[0]}</p>
+        ) : (
+          <ol className="flex flex-col gap-2">
+            {steps.map((step, i) => (
+              <li key={i} className="flex gap-3 text-body-md leading-6">
+                <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-ember text-label-md font-bold text-canvas">{i + 1}</span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        ))}
+      {points.length > 0 && (
+        <ul className="flex flex-col gap-1.5 border-t border-border pt-3">
+          {points.map((point, i) => (
+            <li key={i} className="flex gap-2 text-body-md leading-6 text-text-secondary">
+              <span aria-hidden="true" className="text-volt">✓</span>
+              <span>{point}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }

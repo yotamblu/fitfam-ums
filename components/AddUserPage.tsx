@@ -10,6 +10,7 @@ import { useAdminSession } from "./AdminSession";
 import Button, { buttonClasses } from "./ui/Button";
 import Chip from "./ui/Chip";
 import { CheckIcon } from "./ui/icons";
+import { HowItWorks } from "./ui/Help";
 import PageHeader from "./ui/PageHeader";
 
 export default function AddUserPage() {
@@ -139,6 +140,15 @@ export default function AddUserPage() {
         title="הוספת לקוח"
         description="מוסיפים את המייל של הלקוח ואת התוכניות שרכש. אחר כך הוא יכול להתחבר עם Google."
       />
+
+      <HowItWorks id="add-customer" guideHref="/guide#customers">
+        <ol className="list-decimal ps-6">
+          <li>כותבים את המייל <b>של חשבון ה-Google</b> של הלקוח, בדיוק כמו שהוא מתחבר איתו. אין סיסמאות: הלקוח נכנס רק עם Google.</li>
+          <li>מסמנים את התוכניות שהוא רכש. אפשר כמה תוכניות לאותו לקוח.</li>
+          <li>לוחצים <b>הוספת לקוח</b>. מרגע זה אפשר להתחבר, אבל רק עם המייל הזה. מייל שלא נוסף כאן לא יכול להיכנס.</li>
+        </ol>
+        <p>כל תוכנית מתחילה ברמה הראשונה. לקוח מתקדם יכול לדלג קדימה בעצמו בתוך האפליקציה, על ידי מעבר האתגר של הרמה שמתחתיה. אי אפשר כרגע לשנות תוכניות ללקוח קיים או להסיר לקוח מהמסך הזה.</p>
+      </HowItWorks>
 
       <form
         onSubmit={submit}
