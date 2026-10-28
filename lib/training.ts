@@ -106,8 +106,16 @@ export const LINE_FIELDS: Record<Measure, FieldSpec[]> = {
   max_effort: [SETS, { key: "capSec", label: "תקרת זמן (שניות, לא חובה)", min: 1, max: 7200 }, RPE, REST],
 };
 
-export type Activity = "run" | "swim";
-export const ACTIVITY_LABELS: Record<Activity, string> = { run: "ריצה", swim: "שחייה" };
+export type Activity = "run" | "swim" | "walk";
+export const ACTIVITY_LABELS: Record<Activity, string> = { run: "ריצה", swim: "שחייה", walk: "הליכה" };
+
+/** A personal running pace, computed per customer from their 5 km time (running segments only). */
+export const PACE_LABELS: Record<string, string> = {
+  easy: "קצב ריצה קלה",
+  threshold: "קצב סף",
+  interval: "קצב אינטרוולים",
+  fivek: "קצב 5 ק״מ",
+};
 export type EnduranceBy = "distance" | "duration";
 
 /** Plain run / swim segment: no bank exercise, either a distance or a duration, then zone, RPE and rest. */
@@ -153,6 +161,8 @@ export type FormLine = {
   /** Endurance-block lines only: what is done and whether the segment is measured by distance or time. */
   activity: Activity;
   by: EnduranceBy;
+  /** Endurance running lines: a personal pace kind (key of PACE_LABELS) or "" for none. */
+  pace: string;
 };
 export type FormBlock = {
   id?: string;
@@ -164,7 +174,7 @@ export type FormBlock = {
 export type FormSection = { id?: string; title: string; blocks: FormBlock[] };
 
 export function emptyLine(activity: Activity = "run"): FormLine {
-  return { exerciseId: "", values: {}, loadHe: "", notesHe: "", activity, by: "duration" };
+  return { exerciseId: "", values: {}, loadHe: "", notesHe: "", activity, by: "duration", pace: "" };
 }
 
 export function emptyBlock(style: BlockStyle = "straight", activity: Activity = "run"): FormBlock {
@@ -217,8 +227,9 @@ export function contentToForm(content: WorkoutContent, exercises: Map<string, Ex
               values,
               loadHe: "",
               notesHe: typeof line.notesHe === "string" ? line.notesHe : "",
-              activity: line.activity === "swim" ? ("swim" as const) : ("run" as const),
+              activity: line.activity === "swim" || line.activity === "walk" ? (line.activity as Activity) : ("run" as const),
               by,
+              pace: typeof line.pace === "string" ? line.pace : "",
             };
           }
           const exerciseId = line.exerciseId ?? "";
@@ -235,6 +246,7 @@ export function contentToForm(content: WorkoutContent, exercises: Map<string, Ex
             notesHe: typeof line.notesHe === "string" ? line.notesHe : "",
             activity: "run" as const,
             by: "duration" as const,
+            pace: "",
           };
         }),
       };
@@ -266,6 +278,7 @@ export function formToContent(sections: FormSection[], exercises: Map<string, Ex
                   if (value !== undefined) outLine[spec.key] = value;
                 }
                 if (line.notesHe.trim()) outLine.notesHe = line.notesHe.trim();
+                if (line.activity === "run" && line.pace) outLine.pace = line.pace;
                 return outLine;
               });
             return outBlock;

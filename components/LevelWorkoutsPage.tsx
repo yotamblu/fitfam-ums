@@ -317,6 +317,7 @@ function WorkoutRow({
         </Link>
         <div className="flex flex-wrap gap-1.5">
           {isChallenge && <Chip tone="ember">אתגר מעבר רמה</Chip>}
+          {workout.type === "checkpoint" && <Chip tone="volt">★ נקודת ביקורת</Chip>}
           <Chip tone="info">{SPORT_LABELS[workout.sport]}</Chip>
           <Chip tone={workout.status === "published" ? "volt" : "neutral"}>{STATUS_LABELS[workout.status]}</Chip>
           {workout.estMinutes !== null && <Chip>{workout.estMinutes} דק׳</Chip>}

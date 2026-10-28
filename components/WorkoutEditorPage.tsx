@@ -7,6 +7,7 @@ import { ApiError, api } from "@/lib/api";
 import { describeError } from "@/lib/messages";
 import {
   ACTIVITY_LABELS,
+  PACE_LABELS,
   BLOCK_FIELDS,
   LINE_FIELDS,
   MEASURE_LABELS,
@@ -71,6 +72,7 @@ export default function WorkoutEditorPage() {
   const [estMinutes, setEstMinutes] = useState("");
   const [descriptionHe, setDescriptionHe] = useState("");
   const [goalHe, setGoalHe] = useState("");
+  const [checkpoint, setCheckpoint] = useState(false);
   const [sections, setSections] = useState<FormSection[]>([emptySection()]);
 
   const [busy, setBusy] = useState(false);
@@ -78,7 +80,7 @@ export default function WorkoutEditorPage() {
   const [steps, setSteps] = useState<Step[] | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const type: WorkoutType = workout?.type ?? newType;
+  const type: WorkoutType = newType === "challenge" || workout?.type === "challenge" ? "challenge" : checkpoint ? "checkpoint" : "regular";
   const status: WorkoutStatus = workout?.status ?? "draft";
   const levelId = workout?.levelId ?? newLevelId;
 
@@ -104,6 +106,7 @@ export default function WorkoutEditorPage() {
     setEstMinutes(loaded.estMinutes === null ? "" : String(loaded.estMinutes));
     setDescriptionHe(loaded.descriptionHe ?? "");
     setGoalHe(loaded.goalHe ?? "");
+    setCheckpoint(loaded.type === "checkpoint");
     const form = contentToForm(loaded.content, bank);
     setSections(form.length > 0 ? form : [emptySection()]);
   }, []);
@@ -137,6 +140,7 @@ export default function WorkoutEditorPage() {
       titleHe: titleHe.trim(),
       descriptionHe: descriptionHe.trim(),
       goalHe: goalHe.trim(),
+      type,
       estMinutes: minutes !== null && Number.isFinite(minutes) ? minutes : null,
       content: formToContent(sections, exerciseMap),
     };
@@ -154,7 +158,7 @@ export default function WorkoutEditorPage() {
           setNotice({ tone: "error", text: "חסרה רמה. חזרו לרשימת האימונים של הרמה ופתחו אימון חדש משם." });
           return null;
         }
-        saved = await api.createWorkout(newLevelId, { ...buildInput(), type: newType });
+        saved = await api.createWorkout(newLevelId, buildInput());
         // update the address without remounting the page, so the notice and the step preview survive the first save
         window.history.replaceState(null, "", `/workouts/${saved.id}`);
       }
@@ -344,6 +348,24 @@ export default function WorkoutEditorPage() {
             maxLength={2000}
           />
         </Field>
+        {type !== "challenge" && (
+          <label className="flex cursor-pointer items-start gap-2 text-body-md md:col-span-2">
+            <input
+              type="checkbox"
+              checked={checkpoint}
+              onChange={(e) => setCheckpoint(e.target.checked)}
+              className="mt-1 size-4 accent-ember"
+            />
+            <span>
+              <b>נקודת ביקורת (כוכב)</b>: מסמנת סוף שלב בתוך הרמה. הלקוח רואה כוכב קטן על המפה ואת היעד שכתבתם. אין בה עובר או נכשל, והיא אימון רגיל לכל דבר.
+            </span>
+          </label>
+        )}
+        {type === "checkpoint" && (
+          <Field label="יעד לנקודת הביקורת (לא חובה)" htmlFor="w-goal" hint="מה הלקוח אמור להצליח לעשות כדי להמשיך לשלב הבא.">
+            <TextArea id="w-goal" value={goalHe} onChange={(e) => setGoalHe(e.target.value)} maxLength={1000} />
+          </Field>
+        )}
         {type === "challenge" && (
           <Field
             label="מטרת האתגר (מה צריך לעשות כדי לעבור)"
@@ -719,6 +741,18 @@ function EnduranceLineEditor({
               ))}
             </Select>
           </Field>
+          {line.activity === "run" && (
+            <Field label="קצב אישי" htmlFor={`${id}-pace`} help={FIELD_HELP.pace}>
+              <Select id={`${id}-pace`} value={line.pace} onChange={(e) => onPatch({ pace: e.target.value })}>
+                <option value="">ללא</option>
+                {Object.entries(PACE_LABELS).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
           <Field label="מודדים לפי" htmlFor={`${id}-by`} help={FIELD_HELP.measuredBy}>
             <Select
               id={`${id}-by`}

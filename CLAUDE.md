@@ -60,6 +60,13 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
 - Not built yet: change a customer's plan/level, remove a customer, copy a workout to another level (the API supports it). (Waitlist -> customer works as a link to `/add` with
   the email pre-filled; the waitlist row flips to "כבר משתמש" once the customer exists.)
 
+## Workout editor notes
+- Endurance lines (`WorkoutEditorPage.tsx`, `lib/training.ts`): `activity` is run / swim / walk, and a run line may have a personal `pace`
+  (easy, threshold, interval, 5 km; the API computes the numbers per customer). `contentToForm`/`formToContent` must keep every field the
+  API accepts, otherwise editing a workout in the UMS silently drops it (walk was once turned into run and pace lost; fixed 2026-10-29).
+
+- Checkpoint: a checkbox in the editor (non-challenge workouts) sets the workout `type` to `checkpoint` (a star on the customer roadmap, optional goal text); the list shows a "★" chip.
+
 ## Security rules (audited 2026-10-07)
 - Authorisation is the API's job (admin role checked on every request). Never rely on hiding UI, and never add
   pages that show data without the shell's admin check.

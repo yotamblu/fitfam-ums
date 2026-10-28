@@ -71,7 +71,7 @@ export type Sport = "running" | "swimming" | "gym" | "calisthenics";
 export type Measure = "reps" | "hold_time" | "distance" | "duration" | "calories" | "max_effort";
 export type BlockStyle = "straight" | "circuit" | "amrap" | "emom" | "for_time" | "endurance";
 export type WorkoutStatus = "draft" | "published" | "archived";
-export type WorkoutType = "regular" | "challenge";
+export type WorkoutType = "regular" | "checkpoint" | "challenge";
 
 export type Exercise = {
   id: string;
