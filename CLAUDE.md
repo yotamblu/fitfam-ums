@@ -67,6 +67,8 @@ waitlist's "הוספה כלקוח" button links there with `?email=` (read via `
 
 - Checkpoint: a checkbox in the editor (non-challenge workouts) sets the workout `type` to `checkpoint` (a star on the customer roadmap, optional goal text); the list shows a "★" chip.
 
+- The customer app's legal gate (terms + health declaration) also applies to admin accounts, but only inside the customer app; `/admin/**` endpoints and this site are not gated by it.
+
 ## Security rules (audited 2026-10-07)
 - Authorisation is the API's job (admin role checked on every request). Never rely on hiding UI, and never add
   pages that show data without the shell's admin check.
