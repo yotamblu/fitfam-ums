@@ -3,6 +3,8 @@ import type {
   CurrentUser,
   Exercise,
   ExerciseInput,
+  KnowledgeInput,
+  KnowledgeSection,
   LevelWorkouts,
   Plan,
   PlanTree,
@@ -122,4 +124,12 @@ export const api = {
       body: JSON.stringify(levelId ? { levelId } : {}),
     }),
   workoutSteps: (id: string) => request<Steps>(`/admin/workouts/${id}/steps`),
+
+  // ---- Fitbot knowledge ----
+  listKnowledge: () => request<KnowledgeSection[]>("/admin/fitbot/knowledge"),
+  createKnowledge: (input: KnowledgeInput) =>
+    request<KnowledgeSection>("/admin/fitbot/knowledge", { method: "POST", body: JSON.stringify(input) }),
+  updateKnowledge: (id: string, input: KnowledgeInput) =>
+    request<KnowledgeSection>(`/admin/fitbot/knowledge/${id}`, { method: "PUT", body: JSON.stringify(input) }),
+  deleteKnowledge: (id: string) => request<void>(`/admin/fitbot/knowledge/${id}`, { method: "DELETE" }),
 };

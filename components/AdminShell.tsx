@@ -27,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/waitlist", label: "רשימת המתנה", also: [] as string[] },
   { href: "/plans", label: "תוכניות ואימונים", also: ["/workouts"] },
   { href: "/exercises", label: "בנק תרגילים", also: [] as string[] },
+  { href: "/fitbot", label: "Fitbot", also: [] as string[] },
   { href: "/guide", label: "מדריך", also: [] as string[] },
 ];
 

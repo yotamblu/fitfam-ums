@@ -206,3 +206,22 @@ export type Step = {
 };
 
 export type Steps = { workoutId: string; resumeStep: number; steps: Step[] };
+
+/** One text section the coaches write for Fitbot; all enabled sections are added to its instructions. */
+export type KnowledgeSection = {
+  id: string;
+  slug: string;
+  titleHe: string;
+  contentHe: string;
+  enabled: boolean;
+  sortOrder: number;
+  updatedAt: string;
+};
+
+export type KnowledgeInput = {
+  slug: string;
+  titleHe: string;
+  contentHe: string;
+  enabled: boolean;
+  sortOrder: number;
+};

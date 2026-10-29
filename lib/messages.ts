@@ -31,6 +31,9 @@ const MESSAGES: Record<string, string> = {
   title_required: "כדי לפרסם צריך שם לאימון.",
   goal_required: "כדי לפרסם אתגר צריך לכתוב את המטרה שלו.",
   invalid_content: "תוכן האימון אינו תקין.",
+  slug_taken: "כבר יש חלק עם המזהה הזה.",
+  invalid_slug: "המזהה יכול להכיל רק אותיות קטנות באנגלית, ספרות ומקף.",
+  knowledge_too_long: "הטקסט הכולל של כל החלקים הפעילים ארוך מדי. קצרו חלק או כבו אחד מהם.",
   google_unavailable: "אי אפשר להגיע ל-Google כרגע. נסו שוב עוד רגע.",
 };
 

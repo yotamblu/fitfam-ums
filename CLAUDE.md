@@ -24,7 +24,7 @@ hardcode them. Business context may exist in a private `../CLAUDE.md` outside th
 
 ## Structure
 `app/` (root layout, theme tokens in `globals.css`, tab icon, and the `(admin)` route group: its `layout.tsx` wraps every
-page in `AdminShell`, so the login survives navigation; pages are `/` users, `/add` add a customer, `/waitlist`, `/plans` and `/plans/[levelId]` (ordered workouts of a plan level), `/workouts/[id]` (editor; `new` with `?levelId=&type=`), `/exercises` (exercise bank), `/guide` (the coach guide)) ·
+page in `AdminShell`, so the login survives navigation; pages are `/` users, `/add` add a customer, `/waitlist`, `/plans` and `/plans/[levelId]` (ordered workouts of a plan level), `/workouts/[id]` (editor; `new` with `?levelId=&type=`), `/exercises` (exercise bank), `/fitbot` (the text sections the AI assistant is told: add, edit, switch off, delete; `FitbotPage.tsx`), `/guide` (the coach guide)) ·
 `components/` (`AdminShell` login + header + nav, `AdminSession` context with `useAdminSession`, `UsersPage`,
 `AddUserPage`, `WaitlistPage`, `GoogleSignIn`, and `ui/` primitives: `Button`, `Chip`, `StatCard`, `SegmentedControl`,
 `SearchInput`, `PageHeader`, `Avatar`, `Backdrop`, `Field`, `icons`; training pages: `PlansPage`, `LevelWorkoutsPage`, `WorkoutEditorPage`, `ExercisesPage`) · `lib/` (`api.ts`, `types.ts`, `messages.ts`, `sports.ts`, `training.ts`: labels, per-exercise-type field lists that mirror the API validator, form <-> API content conversion, Hebrew step descriptions) ·
